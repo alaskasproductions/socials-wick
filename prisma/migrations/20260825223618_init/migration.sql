@@ -8,7 +8,30 @@ CREATE TABLE "User" (
     "balance" REAL NOT NULL DEFAULT 0,
     "apiKey" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "emailVerifiedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "PasswordResetToken" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
+    "usedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "EmailVerificationToken" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
+    "usedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "EmailVerificationToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -30,6 +53,8 @@ CREATE TABLE "Service" (
     "min" INTEGER NOT NULL DEFAULT 100,
     "max" INTEGER NOT NULL DEFAULT 100000,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "providerServiceId" TEXT,
+    "providerRate" REAL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -45,6 +70,8 @@ CREATE TABLE "Order" (
     "startCount" INTEGER NOT NULL DEFAULT 0,
     "remains" INTEGER NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "providerOrderId" TEXT,
+    "providerError" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Order_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -57,8 +84,17 @@ CREATE TABLE "FundRequest" (
     "amount" REAL NOT NULL,
     "method" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "vivaOrderCode" TEXT,
+    "vivaTransactionId" TEXT,
+    "stripeSessionId" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "FundRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Setting" (
+    "key" TEXT NOT NULL PRIMARY KEY,
+    "value" TEXT NOT NULL
 );
 
 -- CreateIndex
@@ -68,4 +104,19 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_apiKey_key" ON "User"("apiKey");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PasswordResetToken_tokenHash_key" ON "PasswordResetToken"("tokenHash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EmailVerificationToken_tokenHash_key" ON "EmailVerificationToken"("tokenHash");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FundRequest_vivaOrderCode_key" ON "FundRequest"("vivaOrderCode");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FundRequest_vivaTransactionId_key" ON "FundRequest"("vivaTransactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FundRequest_stripeSessionId_key" ON "FundRequest"("stripeSessionId");
