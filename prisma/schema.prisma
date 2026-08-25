@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -79,7 +79,7 @@ model Service {
   category          Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId        String
   name              String
-  description       String   @default("")
+  description       String   @db.Text // app code always supplies "" if empty — MySQL disallows defaults on TEXT columns
   rate              Float // price per 1000 (our sell price)
   min               Int      @default(100)
   max               Int      @default(100000)
@@ -96,14 +96,14 @@ model Order {
   userId          String
   service         Service     @relation(fields: [serviceId], references: [id])
   serviceId       String
-  link            String
+  link            String      @db.Text
   quantity        Int
   charge          Float
   startCount      Int         @default(0)
   remains         Int         @default(0)
   status          OrderStatus @default(PENDING)
   providerOrderId String? // order id returned by MoreThanPanel
-  providerError   String? // last error message if forwarding to provider failed
+  providerError   String?     @db.Text // last error message if forwarding to provider failed
   createdAt       DateTime    @default(now())
 }
 
@@ -125,5 +125,5 @@ model FundRequest {
 // instead of editing .env directly. Values fall back to env vars when unset.
 model Setting {
   key   String @id
-  value String
+  value String @db.Text
 }

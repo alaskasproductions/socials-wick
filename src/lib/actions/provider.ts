@@ -73,6 +73,7 @@ export async function importProviderServicesAction(
         data: {
           categoryId: category.id,
           name: svc.name,
+          description: "",
           rate,
           min: Number(svc.min) || 100,
           max: Number(svc.max) || 100000,

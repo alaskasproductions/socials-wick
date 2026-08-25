@@ -85,7 +85,7 @@ async function main() {
       });
       if (!existing) {
         await prisma.service.create({
-          data: { ...s, categoryId: category.id },
+          data: { ...s, description: "", categoryId: category.id },
         });
       }
     }
