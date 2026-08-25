@@ -1,0 +1,129 @@
+// Socials Wick — SMM panel data model
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  CANCELLED
+}
+
+enum FundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                      String                   @id @default(cuid())
+  name                    String
+  email                   String                   @unique
+  passwordHash            String
+  role                    Role                     @default(CUSTOMER)
+  balance                 Float                    @default(0)
+  apiKey                  String                   @unique @default(cuid())
+  status                  String                   @default("ACTIVE") // ACTIVE | BANNED
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                 @default(now())
+  orders                  Order[]
+  fundRequests            FundRequest[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  position  Int       @default(0)
+  services  Service[]
+  createdAt DateTime  @default(now())
+}
+
+model Service {
+  id                String   @id @default(cuid())
+  category          Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId        String
+  name              String
+  description       String   @default("")
+  rate              Float // price per 1000 (our sell price)
+  min               Int      @default(100)
+  max               Int      @default(100000)
+  active            Boolean  @default(true)
+  providerServiceId String? // MoreThanPanel service id, if sourced from provider
+  providerRate      Float? // provider's cost rate per 1000, for margin tracking
+  orders            Order[]
+  createdAt         DateTime @default(now())
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  service         Service     @relation(fields: [serviceId], references: [id])
+  serviceId       String
+  link            String
+  quantity        Int
+  charge          Float
+  startCount      Int         @default(0)
+  remains         Int         @default(0)
+  status          OrderStatus @default(PENDING)
+  providerOrderId String? // order id returned by MoreThanPanel
+  providerError   String? // last error message if forwarding to provider failed
+  createdAt       DateTime    @default(now())
+}
+
+model FundRequest {
+  id                String     @id @default(cuid())
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  amount            Float
+  method            String
+  status            FundStatus @default(PENDING)
+  vivaOrderCode     String?    @unique // Viva Smart Checkout payment order code
+  vivaTransactionId String?    @unique // Viva transaction id once paid
+  stripeSessionId   String?    @unique // Stripe Checkout session id
+  createdAt         DateTime   @default(now())
+}
+
+// Generic key/value store for admin-editable configuration, e.g. payment
+// gateway credentials. Lets the admin fill these in from /admin/settings
+// instead of editing .env directly. Values fall back to env vars when unset.
+model Setting {
+  key   String @id
+  value String
+}
