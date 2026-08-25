@@ -1,24 +1,13 @@
 # Deploying to Hostinger
 
-## 1. Create the MySQL database
+The app uses SQLite — a single file (`prisma/dev.db`), no separate database
+server to provision. It's gitignored, so it won't come along with `git
+pull`; it gets created fresh by `prisma migrate deploy` in step 4 below. The
+app root needs to be a persistent path on the server (true for Hostinger's
+Node.js hosting) since the file lives on disk between restarts — back it up
+periodically since it holds all orders/users/settings.
 
-hPanel → **Databases → MySQL Databases**:
-
-1. Create a new database (Hostinger prefixes it, e.g. `u123456789_socialswick`)
-2. Create a database user with a strong password (also prefixed, e.g. `u123456789_admin`)
-3. Attach the user to the database with **all privileges**
-4. Note the host — usually `localhost` if the Node app runs on the same
-   hosting account, otherwise Hostinger will show the correct remote host
-
-Build the connection string:
-
-```
-mysql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
-```
-
-(port is normally `3306`)
-
-## 2. Set up the Node.js app
+## 1. Set up the Node.js app
 
 hPanel → **Advanced → Node.js** → **Create Application**:
 
@@ -36,13 +25,13 @@ hPanel → **Advanced → Node.js** → **Create Application**:
 - Hostinger's panel has an "NPM Install" button — use it after connecting,
   or run it via SSH (below)
 
-## 3. Environment variables
+## 2. Environment variables
 
 Set these in the Node.js app's environment variable panel:
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | the MySQL connection string from step 1 |
+| `DATABASE_URL` | `file:./dev.db` (relative to `prisma/schema.prisma`) |
 | `AUTH_SECRET` | a random 32+ byte string — generate with `openssl rand -base64 32` |
 | `CRON_SECRET` | a random string — used to authenticate the sync-orders cron hit |
 | `SITE_URL` | `https://socialswick.com` (your real domain) |
@@ -52,7 +41,7 @@ Everything else (Viva, Stripe, SMTP, MoreThanPanel, SEO, Tawk.to) is configured
 from the **Admin → Settings** pages after first login — no other env vars are
 required to get the app running.
 
-## 4. First deploy — run once via SSH
+## 3. First deploy — run once via SSH
 
 Enable SSH in hPanel (**Advanced → SSH Access**) if it isn't already, connect,
 `cd` into the application root, then:
@@ -67,17 +56,17 @@ npx prisma db seed   # creates the admin/demo accounts and starter catalog
 
 Then start (or restart) the app from hPanel's Node.js panel.
 
-## 5. Change the seeded admin password
+## 4. Change the seeded admin password
 
 Log in as `admin@socialswick.com` / `admin123` immediately and change it —
-or update it directly in the database before going live.
+or update it directly in `prisma/dev.db` before going live.
 
-## 6. Point your domain + SSL
+## 5. Point your domain + SSL
 
 Standard hPanel step: attach the domain to the app, issue a free SSL
 certificate (Let's Encrypt, one click in hPanel).
 
-## 7. Set up the order-sync cron job
+## 6. Set up the order-sync cron job
 
 The app auto-syncs order statuses with MoreThanPanel every 5 minutes via an
 in-process timer, but that only works while the Node process stays alive
@@ -88,7 +77,7 @@ add a Cron Job in hPanel (**Advanced → Cron Jobs**):
 */5 * * * * curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" https://socialswick.com/api/cron/sync-orders
 ```
 
-## 8. Post-deploy checklist
+## 7. Post-deploy checklist
 
 - [ ] Admin → Settings → Payment Gateways — add Viva Wallet and/or Stripe credentials, enable
 - [ ] Admin → Provider (MTP) — add your MoreThanPanel API key
@@ -108,8 +97,15 @@ being accessed from.
 
 **App won't start / "Cannot find module" errors** — usually means `npm install`
 didn't run against the right Node version, or `npm run build` wasn't run
-before starting. Re-run step 4.
+before starting. Re-run step 3.
 
-**500 errors on any page that touches the database** — check `DATABASE_URL`
-is exactly right (Hostinger's exact host/user/password), and that
+**500 errors on any page that touches the database** — check the app root is
+writable (SQLite needs to create/write `prisma/dev.db`), and that
 `npx prisma migrate deploy` actually completed without errors.
+
+**Data disappeared after a redeploy** — `prisma/dev.db` is gitignored on
+purpose so a fresh `git pull` never overwrites real production data. If a
+redeploy process wipes and re-clones the app root instead of pulling in
+place, the database file goes with it — copy it out and back in around any
+such redeploy, or switch to a real MySQL/Postgres if the host's deploy
+flow can't guarantee a persistent file.
