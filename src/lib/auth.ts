@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  // Trust the Host header from the reverse proxy in front of the app
+  // (Hostinger, or any host where AUTH_URL isn't pinned to one fixed
+  // domain). Safe here since we don't run behind untrusted proxies.
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {

@@ -2,8 +2,13 @@
 
 ## 1. Create the MySQL database
 
-In hPanel → **Databases → MySQL Databases**, create a new database and user.
-Note down: host, port (usually 3306), database name, username, password.
+hPanel → **Databases → MySQL Databases**:
+
+1. Create a new database (Hostinger prefixes it, e.g. `u123456789_socialswick`)
+2. Create a database user with a strong password (also prefixed, e.g. `u123456789_admin`)
+3. Attach the user to the database with **all privileges**
+4. Note the host — usually `localhost` if the Node app runs on the same
+   hosting account, otherwise Hostinger will show the correct remote host
 
 Build the connection string:
 
@@ -11,14 +16,25 @@ Build the connection string:
 mysql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
 ```
 
+(port is normally `3306`)
+
 ## 2. Set up the Node.js app
 
-In hPanel → **Advanced → Node.js**:
+hPanel → **Advanced → Node.js** → **Create Application**:
 
-- Node version: 20 or newer
-- Application root: the folder your GitHub repo deploys into
-- Application startup file: leave as the default entry Next.js expects, or set the start command to `npm start`
-- Connect the GitHub repo (`alaskasproductions/socials-wick`, branch `main`)
+- **Node version**: 20 or newer
+- **Application root**: the folder the app lives in (e.g. `domains/socialswick.com/public_html`, or wherever you connect the repo to)
+- **Application startup file**: `server.js`
+
+  Hostinger's Node.js hosting runs your app through Passenger, which expects
+  a literal `.js` file to `require()`, not an npm script — `next start`
+  alone won't work as the startup file. This repo already includes
+  [`server.js`](server.js), a small wrapper that boots Next.js correctly
+  under that model. Point Hostinger at it directly.
+
+- **Connect the GitHub repo**: `alaskasproductions/socials-wick`, branch `main`
+- Hostinger's panel has an "NPM Install" button — use it after connecting,
+  or run it via SSH (below)
 
 ## 3. Environment variables
 
@@ -30,12 +46,16 @@ Set these in the Node.js app's environment variable panel:
 | `AUTH_SECRET` | a random 32+ byte string — generate with `openssl rand -base64 32` |
 | `CRON_SECRET` | a random string — used to authenticate the sync-orders cron hit |
 | `SITE_URL` | `https://socialswick.com` (your real domain) |
+| `NODE_ENV` | `production` |
 
 Everything else (Viva, Stripe, SMTP, MoreThanPanel, SEO, Tawk.to) is configured
 from the **Admin → Settings** pages after first login — no other env vars are
 required to get the app running.
 
 ## 4. First deploy — run once via SSH
+
+Enable SSH in hPanel (**Advanced → SSH Access**) if it isn't already, connect,
+`cd` into the application root, then:
 
 ```bash
 npm install
@@ -50,7 +70,7 @@ Then start (or restart) the app from hPanel's Node.js panel.
 ## 5. Change the seeded admin password
 
 Log in as `admin@socialswick.com` / `admin123` immediately and change it —
-or update it directly before going live.
+or update it directly in the database before going live.
 
 ## 6. Point your domain + SSL
 
@@ -78,3 +98,18 @@ add a Cron Job in hPanel (**Advanced → Cron Jobs**):
 - [ ] Register the webhook URLs with Viva (`/api/webhooks/viva`) and Stripe (`/api/webhooks/stripe`)
 - [ ] In your Viva payment source settings, set Success/Failure URLs to the real domain
 - [ ] Change the default admin password
+
+## Troubleshooting
+
+**"UntrustedHost" error from NextAuth** — already fixed in the code
+(`trustHost: true` in `src/lib/auth.ts`), but if you ever see this again
+after future changes, it means the app doesn't recognize the domain it's
+being accessed from.
+
+**App won't start / "Cannot find module" errors** — usually means `npm install`
+didn't run against the right Node version, or `npm run build` wasn't run
+before starting. Re-run step 4.
+
+**500 errors on any page that touches the database** — check `DATABASE_URL`
+is exactly right (Hostinger's exact host/user/password), and that
+`npx prisma migrate deploy` actually completed without errors.
