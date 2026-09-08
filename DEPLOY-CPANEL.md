@@ -166,6 +166,14 @@ it work there:
   HTTPS keeps serving a stale page.
 - `server.js` normalizes `X-Forwarded-*` headers because the
   Cloudflare → nginx → Apache chain delivers `https, https`.
+- Add `PassengerLoadShellEnvvars off` to both conf files as well. Without it
+  Passenger starts the app through the user's *login* shell, which sources
+  cPanel's Shell Fork Bomb Protection limits (200 MB RSS/data, 35 processes,
+  100 open files). The Node process then dies with
+  `Fatal process out of memory: Zone` the first time V8 compiles WASM
+  (e.g. the first outbound `fetch()` — Viva OAuth) and the request gets a
+  502. Verify with `grep -E 'resident|processes' /proc/$(pgrep -n -f
+  'Passenger NodeApp')/limits` — everything should read `unlimited`.
 - Terminal/`su -` sessions are memory-capped by Shell Fork Bomb Protection
   (200 MB), which kills `npm install` / `next build`. From the WHM root
   terminal, `runuser` skips the login-shell limits — this is the way to
