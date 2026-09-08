@@ -143,6 +143,35 @@ continuously. As a reliable backup, add a cron job under cPanel →
 - [ ] In your Viva payment source settings, set Success/Failure URLs to the real domain
 - [ ] Change the default admin password
 
+## If the host uses "Application Manager" instead of "Setup Node.js App"
+
+Some cPanel servers (e.g. the current one) only offer **Application Manager**
+(Passenger) with no Node-version, startup-file or env-var fields. What made
+it work there:
+
+- The app registration generates
+  `/etc/apache2/conf.d/userdata/std/2_4/USER/DOMAIN/APP.conf` **and** an
+  `ssl/` twin (HTTP and HTTPS vhosts). Both need, as root:
+  `PassengerAppType node`, `PassengerStartupFile "server.js"`,
+  `PassengerFriendlyErrorPages on`, and `PassengerNodejs` pointing at the
+  repo's `node-wrapper.sh` (Node 20 with a larger heap). Then
+  `apachectl configtest && systemctl restart httpd`. Re-registering the app
+  in the UI regenerates these files and drops the edits.
+- If the server's glibc is older than 2.29, Next's native SWC binary cannot
+  load. Keep `next.config.js` (a `.ts` config is transpiled with SWC on every
+  start) and build with `npx next build --webpack`.
+- Disable cPanel's nginx caching for the account (cPanel → NGINX Caching, or
+  `uapi --user=USER NginxCaching disable_cache`) and clear it
+  (`/usr/local/cpanel/scripts/ea-nginx clear_cache --user=USER`), otherwise
+  HTTPS keeps serving a stale page.
+- `server.js` normalizes `X-Forwarded-*` headers because the
+  Cloudflare → nginx → Apache chain delivers `https, https`.
+- Terminal/`su` sessions are memory-capped by Shell Fork Bomb Protection;
+  run `npm install` / `next build` from a one-off cron job or with the
+  protection temporarily disabled in WHM.
+- Restart the app with `touch tmp/restart.txt` in the app root; Passenger
+  logs to `/etc/apache2/logs/error_log`.
+
 ## Troubleshooting
 
 **"UntrustedHost" error from NextAuth** — already fixed in the code
