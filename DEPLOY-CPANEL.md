@@ -166,9 +166,15 @@ it work there:
   HTTPS keeps serving a stale page.
 - `server.js` normalizes `X-Forwarded-*` headers because the
   Cloudflare → nginx → Apache chain delivers `https, https`.
-- Terminal/`su` sessions are memory-capped by Shell Fork Bomb Protection;
-  run `npm install` / `next build` from a one-off cron job or with the
-  protection temporarily disabled in WHM.
+- Terminal/`su -` sessions are memory-capped by Shell Fork Bomb Protection
+  (200 MB), which kills `npm install` / `next build`. From the WHM root
+  terminal, `runuser` skips the login-shell limits — this is the way to
+  redeploy:
+
+  ```bash
+  runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin \
+    bash -c 'cd /home/socialswick/repositories/socials-wick && git pull && npx next build --webpack && touch tmp/restart.txt'
+  ```
 - Restart the app with `touch tmp/restart.txt` in the app root; Passenger
   logs to `/etc/apache2/logs/error_log`.
 
