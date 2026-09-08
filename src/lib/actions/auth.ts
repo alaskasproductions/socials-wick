@@ -207,3 +207,43 @@ export async function resendVerificationEmailAction(
   await sendVerificationEmail(user);
   return { success: "Verification email sent. Check your inbox." };
 }
+
+// ---- Change password (logged-in users, customers and admins alike) ----
+
+export type ChangePasswordState = { error?: string; success?: string } | undefined;
+
+export async function changePasswordAction(
+  _prevState: ChangePasswordState,
+  formData: FormData
+): Promise<ChangePasswordState> {
+  const session = await auth();
+  if (!session?.user) return { error: "You must be logged in." };
+
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { error: "All fields are required." };
+  }
+  if (newPassword.length < 6) return { error: "New password must be at least 6 characters." };
+  if (newPassword !== confirmPassword) return { error: "New passwords do not match." };
+  if (newPassword === currentPassword) {
+    return { error: "The new password must be different from the current one." };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user) return { error: "User not found." };
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) return { error: "Current password is incorrect." };
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    // Any outstanding reset links would now be stale.
+    prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+  ]);
+
+  return { success: "Your password has been updated." };
+}

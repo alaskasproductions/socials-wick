@@ -7,6 +7,7 @@ const NAV = [
   { href: "/dashboard/new-order", label: "New Order", icon: "🛒" },
   { href: "/dashboard/orders", label: "Order History", icon: "📦" },
   { href: "/dashboard/funds", label: "Add Funds", icon: "💳" },
+  { href: "/dashboard/account", label: "Account", icon: "🔐" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
