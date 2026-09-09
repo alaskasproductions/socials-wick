@@ -72,15 +72,19 @@ export default function NewOrderForm({
           className={inputClass}
         >
           {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {displayName(s.name)} — €{s.rate.toFixed(2)} / 1000
+            <option key={s.id} value={s.id} title={displayName(s.name)}>
+              €{s.rate.toFixed(2)} · {displayName(s.name)}
             </option>
           ))}
         </select>
         {service && (
-          <p className="mt-1 text-xs text-slate-400">
-            Min: {service.min.toLocaleString("de-DE")} · Max: {service.max.toLocaleString("de-DE")}
-          </p>
+          <div className="mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <p className="text-sm font-medium leading-snug text-slate-100">{displayName(service.name)}</p>
+            <p className="mt-1 text-xs text-slate-400">
+              <span className="font-semibold text-brand">€{service.rate.toFixed(2)}</span> per 1000 · Min{" "}
+              {service.min.toLocaleString("de-DE")} · Max {service.max.toLocaleString("de-DE")}
+            </p>
+          </div>
         )}
         {service?.description && (
           <details className="mt-1">
