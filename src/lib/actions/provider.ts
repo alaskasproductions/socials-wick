@@ -7,8 +7,9 @@ import * as provider from "@/lib/providers/morethanpanel";
 import { syncPendingOrders } from "@/lib/order-sync";
 import { setSettings } from "@/lib/settings";
 
-export const DEFAULT_MARKUP_PERCENT = 30;
-export const MARKUP_SETTING_KEY = "mtp.markupPercent";
+// Not exported: a "use server" module may only export async functions.
+const DEFAULT_MARKUP_PERCENT = 30;
+const MARKUP_SETTING_KEY = "mtp.markupPercent";
 
 function parseMarkup(raw: FormDataEntryValue | null): number | null {
   const n = Number(raw);
