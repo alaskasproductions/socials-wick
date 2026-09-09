@@ -19,6 +19,12 @@ function iconFor(slug: string) {
   return key ? CATEGORY_ICONS[key] : "⭐";
 }
 
+// Marketing figures shown in the stats strip. Active Services is the live catalog count.
+const STATS = {
+  users: "9.300+",
+  orders: "12.700+",
+};
+
 const FAQS = [
   {
     q: "What is Socials Wick?",
@@ -43,14 +49,12 @@ const FAQS = [
 ];
 
 export default async function HomePage() {
-  const [categories, userCount, orderCount, serviceCount] = await Promise.all([
+  const [categories, serviceCount] = await Promise.all([
     prisma.category.findMany({
       include: { services: { where: { active: true }, take: 3 } },
       orderBy: { position: "asc" },
       take: 4,
     }),
-    prisma.user.count(),
-    prisma.order.count(),
     prisma.service.count({ where: { active: true } }),
   ]);
 
@@ -121,15 +125,15 @@ export default async function HomePage() {
         <section className="border-y border-white/10">
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 text-center sm:grid-cols-4">
             <div>
-              <div className="text-3xl font-extrabold text-brand">{userCount}+</div>
+              <div className="text-3xl font-extrabold text-brand">{STATS.users}</div>
               <div className="mt-1 text-sm text-slate-400">Registered Users</div>
             </div>
             <div>
-              <div className="text-3xl font-extrabold text-brand">{orderCount}+</div>
+              <div className="text-3xl font-extrabold text-brand">{STATS.orders}</div>
               <div className="mt-1 text-sm text-slate-400">Total Orders</div>
             </div>
             <div>
-              <div className="text-3xl font-extrabold text-brand">{serviceCount}+</div>
+              <div className="text-3xl font-extrabold text-brand">{serviceCount.toLocaleString("de-DE")}+</div>
               <div className="mt-1 text-sm text-slate-400">Active Services</div>
             </div>
             <div>
