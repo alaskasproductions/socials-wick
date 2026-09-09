@@ -190,6 +190,12 @@ it work there:
   ```bash
   runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin     bash -c 'cd /home/socialswick/repositories/socials-wick && cp prisma/dev.db prisma/dev.db.bak-$(date +%Y%m%d-%H%M) && git pull && npm install --no-audit --no-fund && npx prisma migrate deploy && npx prisma generate && npx next build --webpack && touch tmp/restart.txt'
   ```
+- Never pipe `next build` into `head` (or anything that stops reading early).
+  When `head` exits, the build gets SIGPIPE and dies silently *after* printing
+  "Compiled successfully" but *before* writing `.next/BUILD_ID`; Passenger then
+  fails every spawn with "Could not find a production build in the '.next'
+  directory" and the whole site times out. Redirect the build to a log file or
+  use `tail`, and check `ls .next/BUILD_ID` before restarting.
 - Restart the app with `touch tmp/restart.txt` in the app root; Passenger
   logs to `/etc/apache2/logs/error_log`.
 
