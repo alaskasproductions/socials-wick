@@ -124,13 +124,61 @@ export default function RefundPolicyPage() {
       <section id="rp-withdrawal" className="mt-10 scroll-mt-24">
         <h2 className="text-xl font-bold text-foreground">4. EU 14-Day Right of Withdrawal</h2>
         <p className="mt-3 text-sm text-slate-300">
-          If you are a consumer in the European Union, you have a statutory right to withdraw from a
-          distance contract within 14 days without giving a reason. For balance top-ups this right
-          is honoured through Section 2. For individual orders, by placing an order you expressly
-          request that we begin performing the service immediately and acknowledge that, once the
-          service has been fully performed, you lose the right of withdrawal (Article 16(a) of
-          Directive 2011/83/EU and the corresponding Cyprus Consumer Protection Law). Where you
-          withdraw while an order is only partly performed, you pay only for the part delivered.
+          If you are a consumer resident in the European Union or the European Economic Area, you
+          have a statutory right to withdraw from a distance contract within <strong>14 days</strong>{" "}
+          without giving any reason, under Directive 2011/83/EU on consumer rights as transposed in
+          Cyprus by the Consumer Rights Law of 2013 (Law 133(I)/2013) and the equivalent law of your
+          own country. This right applies in addition to, and is not limited by, the rest of this
+          Policy.
+        </p>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-300">
+          <li>
+            <strong>Balance top-ups:</strong> the withdrawal period runs for 14 days from the day of
+            the payment. If you withdraw, we reimburse the balance that has not yet been spent on
+            orders. Balance already used for orders is treated as a service you asked us to perform
+            during the withdrawal period, and only the amount proportionate to what has been
+            delivered is retained (Article 14(3) of the Directive).
+          </li>
+          <li>
+            <strong>Orders:</strong> when you place an order you expressly request that we start
+            performing the service immediately, within the withdrawal period, and you acknowledge
+            that once the service has been <strong>fully performed</strong> (order status
+            Completed) you lose the right of withdrawal (Article 16(a)). If you withdraw while an
+            order is only partly performed, you pay only for the part delivered and the rest is
+            refunded.
+          </li>
+          <li>
+            <strong>How to withdraw:</strong> send us an unequivocal statement of your decision —
+            an email to{" "}
+            <a href={`mailto:${COMPANY.supportEmail}`} className="text-brand hover:underline">
+              {COMPANY.supportEmail}
+            </a>{" "}
+            is enough. You may use the model form below but you do not have to. Sending the
+            statement before the 14-day period ends is sufficient to meet the deadline.
+          </li>
+          <li>
+            <strong>Reimbursement:</strong> we reimburse you without undue delay and in any event no
+            later than <strong>14 days</strong> from the day we receive your withdrawal statement,
+            using the same means of payment you used for the original transaction, without any
+            fee.
+          </li>
+        </ul>
+        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+          <p className="font-semibold text-foreground">Model withdrawal form</p>
+          <p className="mt-2">
+            To: {COMPANY.legalName} (Socials Wick), {COMPANY.address},{" "}
+            {COMPANY.supportEmail}
+          </p>
+          <p className="mt-2">
+            I/We hereby give notice that I/we withdraw from my/our contract for the provision of the
+            following service: [order ID or top-up date and amount]. Ordered on: [date]. Name of
+            consumer: [name]. Address of consumer: [address]. Email used on the account: [email].
+            Date: [date].
+          </p>
+        </div>
+        <p className="mt-3 text-sm text-slate-300">
+          Nothing in this Policy affects your statutory rights under EU or national consumer law,
+          including your rights where a service is not provided with reasonable care and skill.
         </p>
       </section>
 
@@ -144,8 +192,8 @@ export default function RefundPolicyPage() {
           from the address registered on your account and include: the Order ID (for order
           refunds) or the top-up date, amount and payment method (for balance refunds), and a short
           description of the problem. We acknowledge requests within 2 business days and decide most
-          cases within 5 business days; investigations involving our fulfilment provider may take
-          longer, and we will keep you informed.
+          cases within 5 business days. Investigations involving our fulfilment provider may take a
+          little longer, but any refund due is always paid within the 14-day deadline in Section 4.
         </p>
       </section>
 
@@ -158,12 +206,13 @@ export default function RefundPolicyPage() {
           </li>
           <li>
             <strong>Card payments (Viva Wallet, Stripe)</strong> are refunded to the original card
-            through the same payment provider. Depending on your bank, the money appears on your
-            statement within 5–10 business days.
+            through the same payment provider, no later than 14 days after we receive your request.
+            Depending on your bank, the money then appears on your statement within 3–10 business
+            days.
           </li>
           <li>
-            <strong>Bank transfers</strong> are returned to the originating account within 10
-            business days of approval.
+            <strong>Bank transfers</strong> are returned to the originating account, no later than
+            14 days after we receive your request.
           </li>
           <li>
             We refund the full amount paid; we do not deduct our own fees. Currency conversion
