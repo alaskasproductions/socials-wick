@@ -183,10 +183,24 @@ it work there:
   runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin \
     bash -c 'cd /home/socialswick/repositories/socials-wick && git pull && npx next build --webpack && touch tmp/restart.txt'
   ```
+
+  When a release adds dependencies or a Prisma migration, back up the DB and
+  run the full sequence instead (each step is safe to repeat):
+
+  ```bash
+  runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin     bash -c 'cd /home/socialswick/repositories/socials-wick && cp prisma/dev.db prisma/dev.db.bak-$(date +%Y%m%d-%H%M) && git pull && npm install --no-audit --no-fund && npx prisma migrate deploy && npx prisma generate && npx next build --webpack && touch tmp/restart.txt'
+  ```
 - Restart the app with `touch tmp/restart.txt` in the app root; Passenger
   logs to `/etc/apache2/logs/error_log`.
 
 ## Troubleshooting
+
+**Two-factor authentication** — optional per account (Dashboard → Account,
+Admin → Settings → Account). Secrets are encrypted with `AUTH_SECRET`, so
+changing that variable invalidates every enrolled authenticator (users must
+re-enrol). An admin can reset a locked-out customer from Admin → Users →
+"Reset"; to reset the admin itself, run on the server:
+`sqlite3 prisma/dev.db "update User set totpSecret=null, totpEnabled=0 where email='admin@socialswick.com'"`.
 
 **"UntrustedHost" error from NextAuth** — already fixed in the code
 (`trustHost: true` in `src/lib/auth.ts`).
