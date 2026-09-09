@@ -5,67 +5,67 @@ import { useEffect } from "react";
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: "🟡 What is BASIC?",
-    body: "BASIC: our Basic tier offers the most affordable automated services with fairly lower quality. While we strive to provide satisfactory results, there might be occasional drops or slowdowns, and we cannot offer any guarantees for this tier.",
+    body: "Basic is our entry-level tier: the lowest prices in the catalog, delivered by automated sources of modest quality. Results are usually fine for building up numbers quickly, but counts can fall back over time and delivery speed may vary. Basic services come without any refill or stability guarantee — choose them when budget matters more than retention.",
   },
   {
     title: "🟢 What is MEDIUM?",
-    body: "MEDIUM: the Medium tier is where quality meets reliability. These services are crafted to provide solid performance and realistic engagement. Whether you're boosting views, followers or any other metric, Medium options are designed for a balanced blend of speed and stability. Some Medium services include refill guarantees, not all do — it depends on the source and delivery method. What you always get is a service that has been tested for quality and retention, offering a more authentic boost without the fluff.",
+    body: "Medium is the balanced middle ground between price and dependability. These services have been checked for retention and behave far more naturally than Basic ones, so your growth looks steady rather than sudden. Refill coverage varies from service to service (it depends on how each one is sourced), so always check the individual service description — but every Medium option has passed our quality review.",
   },
   {
     title: "🔵 What is ELITE?",
-    body: "ELITE: our premium tier offers best-in-class services created through organic methods, ensuring stable and reliable performance. With Elite services you can expect top-notch quality without drops, making it the most expensive but highly worthwhile option for a seamless experience. Elite services can attract 100% organic engagement to your content.",
+    body: "Elite is our top tier. Engagement comes from organic, real-user methods, which is why these services stay stable with no drops and often bring additional genuine interaction to your content. They are the most expensive option and, for accounts that care about long-term quality, the one we recommend.",
   },
   {
     title: "What is Drip-Feed?",
-    body: "Drip-Feed delivers your order gradually over multiple runs instead of all at once. This creates a more natural and consistent increase in engagement over time.",
+    body: "With Drip-Feed the ordered quantity is released in smaller portions spread across several runs, instead of arriving in one burst. The result is a steadier, more organic-looking growth curve.",
   },
   {
     title: "What are Power Services?",
-    body: "Power Services are designed for high-speed delivery, offering significantly higher daily delivery capacity than standard services. They are ideal when delivery speed and completing larger quantities in a shorter time are the priority.",
+    body: "Power Services prioritise speed: they can deliver far more per day than a standard service. Pick them when you need a large quantity completed in a short time.",
   },
   {
     title: "What are Slow Services?",
-    body: "Slow Services operate with a lower daily delivery speed, allowing orders to be completed more gradually over time. They are ideal if you prefer a slower and more controlled delivery pace.",
+    body: "Slow Services deliberately cap the daily speed so an order completes over a longer period. They suit accounts that want growth to look measured and controlled.",
   },
   {
     title: "What are VIP Services?",
-    body: "VIP Services represent the highest-quality options within their category. Delivery is provided through accounts belonging to real users, making them a premium choice if you prioritise overall service quality.",
+    body: "VIP marks the highest-quality option inside a category. Delivery comes from accounts owned by real people, which makes VIP the premium pick when quality outweighs price.",
   },
   {
     title: "What are Non-Drop Services?",
-    body: "Non-Drop Services offer a 0% drop rate and are designed to remain stable even during platform updates. They are ideal if you prioritise maximum retention and service stability.",
+    body: "Non-Drop Services are built to keep what they deliver — a 0% drop rate that holds even when the platform pushes updates. Choose them when retention and stability are your priority.",
   },
   {
     title: "What is Split Delivery?",
-    body: "Split Delivery distributes the selected quantity across a specified number of your latest posts. Instead of applying the full quantity to a single post, the service splits the delivery between your recent posts.",
+    body: "Split Delivery shares one order across a number of your most recent posts rather than concentrating everything on a single post. You choose the quantity; the service divides it between those posts.",
   },
   {
     title: "What are Influencer Services?",
-    body: "Influencer Services provide engagement from 100% organic, real users. They are ideal if you prioritise authentic engagement and real-user activity.",
+    body: "Influencer Services are sourced entirely from real, organic users. They are the right choice when authenticity and genuine activity on your content matter most.",
   },
   {
     title: "What is a Growth Package?",
-    body: "A Growth Package combines multiple services into one coordinated campaign. Instead of purchasing each type of engagement separately, you choose a package designed to support more balanced profile or content growth.",
+    body: "A Growth Package bundles several types of engagement into a single coordinated campaign, so you don't have to order followers, likes and views separately. Packages are designed to grow a profile or a piece of content in a balanced way.",
   },
   {
     title: "What are Monetization Services?",
-    body: "Monetization Services help accounts or channels work toward specific platform monetization requirements, such as views, watch time, subscribers or other eligible metrics. Final monetization eligibility is always determined by the platform.",
+    body: "Monetization Services target the metrics platforms look at before unlocking earnings — views, watch time, subscribers and similar thresholds. They help you reach the numbers; whether an account is approved for monetization is always the platform's decision.",
   },
   {
     title: "What are Future Services?",
-    body: "Future Services automatically apply the selected service to new content published after your order is created. They are ideal if you post regularly and want ongoing delivery without placing a separate order for every new post.",
+    body: "Future Services attach to content you publish after the order is placed: each new post automatically receives the chosen service. Ideal for regular posters who want continuous delivery without ordering every time.",
   },
   {
     title: "What are High Retention Services?",
-    body: "High Retention Services provide engagement that remains active for longer compared with standard services. For view services, High Retention may also mean viewers stay on the content for a specified amount of time, depending on the service.",
+    body: "High Retention Services keep their engagement in place noticeably longer than standard ones. For view services it can also mean viewers watch for a set minimum duration, depending on the specific service.",
   },
   {
     title: "What are Old Account Services?",
-    body: "Old Account Services use aged, established accounts rather than newly created accounts for delivery. They are ideal if you prefer engagement from accounts with an existing history.",
+    body: "Old Account Services deliver from aged accounts with an established history instead of freshly created ones — a better fit if you prefer engagement that looks seasoned.",
   },
   {
     title: "What are Gradual Services?",
-    body: "Gradual Services deliver engagement progressively instead of creating a sudden increase. They are ideal if you want a smoother delivery that better aligns with your existing engagement levels.",
+    body: "Gradual Services ramp up step by step instead of spiking all at once, so the new activity blends in with the engagement your content already receives.",
   },
 ];
 
