@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { COMPANY } from "@/lib/company";
 
 const TOC = [
   ["tm-quick", "Quick Order Rules"],
@@ -24,7 +25,7 @@ export default function TermsPage() {
     <div className="mx-auto max-w-4xl px-4 py-16">
       <h1 className="text-3xl font-bold text-foreground">Terms & Conditions</h1>
       <p className="mt-3 text-sm text-slate-400">
-        Last updated: 24 August 2026. Governed by the laws of the Republic of Cyprus.
+        Last updated: {COMPANY.legalUpdated}. Governed by the laws of the Republic of Cyprus.
       </p>
 
       <nav className="mt-8 glass rounded-xl p-5">
@@ -71,11 +72,21 @@ export default function TermsPage() {
       <section id="tm-overview" className="mt-10 scroll-mt-24">
         <h2 className="text-xl font-bold text-foreground">2. Overview & Acceptance</h2>
         <p className="mt-3 text-sm text-slate-300">
-          These Terms & Conditions ("Terms") form a binding agreement between you ("Customer",
-          "you") and Socials Wick ("Socials Wick", "we", "us", "our"), a service operated in
-          accordance with the laws of the Republic of Cyprus. By creating an account, adding
-          funds, or placing an order on socialswick.com (the "Platform"), you accept these Terms
-          in full.
+          These Terms & Conditions (&quot;Terms&quot;) form a binding agreement between you (&quot;Customer&quot;,
+          &quot;you&quot;) and {COMPANY.legalName}, trading as Socials Wick (&quot;Socials Wick&quot;, &quot;we&quot;, &quot;us&quot;,
+          &quot;our&quot;), a company registered in the Republic of Cyprus (registration number{" "}
+          {COMPANY.registrationNumber}, VAT {COMPANY.vatNumber}) with its registered office at{" "}
+          {COMPANY.address}. You accept these Terms, together with our{" "}
+          <Link href="/privacy" className="text-brand hover:underline">
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/refund-policy" className="text-brand hover:underline">
+            Refund Policy
+          </Link>
+          , by ticking the acceptance box when you create your account, and again each time you add
+          funds or place an order on socialswick.com (the &quot;Platform&quot;). We record the date and time
+          of your acceptance.
         </p>
         <p className="mt-3 text-sm text-slate-300">
           Defined terms used throughout: <strong>Order</strong> means a request to deliver a
@@ -106,7 +117,7 @@ export default function TermsPage() {
         </p>
         <p className="mt-3 text-sm text-slate-300">
           Services are provided independently of, and are not endorsed by, the social media
-          platforms they target. Each platform's own terms of service govern what activity is
+          platforms they target. Each platform&apos;s own terms of service govern what activity is
           permitted on that platform, and compliance with those third-party terms is your
           responsibility.
         </p>
@@ -161,7 +172,13 @@ export default function TermsPage() {
         </ul>
         <p className="mt-3 text-sm text-slate-300">
           Refund and cancellation requests must be submitted through your account dashboard or our
-          support channels, referencing the Order ID, before we can investigate.
+          support channels, referencing the Order ID, before we can investigate. Full details —
+          including refunds of unused balance, the EU 14-day right of withdrawal, timelines and how
+          refunds are paid — are set out in our{" "}
+          <Link href="/refund-policy" className="text-brand hover:underline">
+            Refund Policy
+          </Link>
+          , which forms part of these Terms.
         </p>
       </section>
 
@@ -170,9 +187,14 @@ export default function TermsPage() {
         <p className="mt-3 text-sm text-slate-300">
           Funds added to your account are held as a prepaid Balance and may only be used to order
           Services on the Platform; the Balance is not a deposit account, does not accrue
-          interest, and is non-transferable to another user. Payments are processed by third-party
-          payment providers, and their own terms and any applicable processing fees apply to your
-          transaction independently of these Terms.
+          interest, and is non-transferable to another user. Card payments are processed by Viva
+          Wallet (Viva Payment Services S.A. / Vivabank S.A.) on its secure hosted checkout page and,
+          where offered, by Stripe; we never receive or store your full card details. Your balance
+          is credited automatically once the payment provider confirms the transaction. Top-ups by
+          bank transfer or other manual methods are credited only after we have received the funds
+          and approved the request. The payment providers&apos; own terms and any applicable processing
+          fees apply to your transaction independently of these Terms, and your card statement may
+          show our legal entity name, {COMPANY.legalName}.
         </p>
         <p className="mt-3 text-sm text-slate-300">
           Where required by applicable Cyprus or EU tax law, VAT or other indirect taxes may be
@@ -193,7 +215,7 @@ export default function TermsPage() {
           compliance with applicable law in your market; Socials Wick has no direct relationship
           with your end customers. You may not make false or misleading claims about delivery
           speed, quality, or outcomes when marketing resold Services, and you may not use the API
-          to overload, disrupt, or probe the Platform's infrastructure.
+          to overload, disrupt, or probe the Platform&apos;s infrastructure.
         </p>
       </section>
 
@@ -210,7 +232,7 @@ export default function TermsPage() {
           </li>
           <li>Generate fake reviews or deceptive endorsements; or</li>
           <li>
-            Reverse-engineer, scrape, copy, or otherwise exploit the Platform's software, pricing
+            Reverse-engineer, scrape, copy, or otherwise exploit the Platform&apos;s software, pricing
             data, or service catalog beyond normal use of your account or API key.
           </li>
         </ul>
@@ -220,8 +242,14 @@ export default function TermsPage() {
         <h2 className="text-xl font-bold text-foreground">9. Account, Security & Suspension</h2>
         <p className="mt-3 text-sm text-slate-300">
           You are responsible for using a strong password and for safeguarding your login
-          credentials and API key. Notify us immediately if you suspect unauthorized access to
-          your account. We may suspend or terminate an account, with or without notice, where we
+          credentials, API key and, if enabled, your authenticator device. We strongly recommend
+          enabling two-factor authentication from your account page; once enabled, every login
+          requires a code from your authenticator app in addition to your password, and we cannot
+          be held responsible for access that was obtained with your valid credentials and code. If
+          you lose access to your authenticator, contact support — we will remove two-factor
+          authentication only after verifying that you are the account holder. You must verify
+          your email address before using the customer dashboard. Notify us immediately if you
+          suspect unauthorized access to your account. We may suspend or terminate an account, with or without notice, where we
           reasonably believe it has been used in breach of these Terms, for fraud or abuse, to
           interfere with Platform operations, or in a manner that exposes Socials Wick or other
           users to harm or legal risk. Any remaining Balance on a terminated account may be
@@ -246,10 +274,17 @@ export default function TermsPage() {
         <h2 className="text-xl font-bold text-foreground">11. Cookies & Analytics</h2>
         <p className="mt-3 text-sm text-slate-300">
           We use cookies and similar technologies that are strictly necessary to keep you signed
-          in and to secure your session, along with limited analytics cookies to understand
-          Platform usage. You can control or disable non-essential cookies through your browser
-          settings; disabling strictly necessary cookies may prevent parts of the Platform,
-          including login, from working correctly.
+          in, to secure your session and to complete the two-factor authentication step of login,
+          together with Cloudflare security cookies and Google Analytics 4 cookies used to measure
+          how the public Platform is used. Google Search Console is used to monitor our presence in
+          Google Search and sets no cookies. The cookies used, their purposes and how to opt out are
+          listed in Section 8 of our{" "}
+          <Link href="/privacy" className="text-brand hover:underline">
+            Privacy Policy
+          </Link>
+          . You can control or disable non-essential cookies through your browser settings;
+          disabling strictly necessary cookies may prevent parts of the Platform, including login,
+          from working correctly.
         </p>
       </section>
 
@@ -258,7 +293,7 @@ export default function TermsPage() {
         <p className="mt-3 text-sm text-slate-300">
           All software, branding, text, and design on the Platform are the property of Socials Wick
           or its licensors and may not be copied or reused without permission. The Platform is
-          provided on an "as is" and "as available" basis, without warranties of any kind, express
+          provided on an &quot;as is&quot; and &quot;as available&quot; basis, without warranties of any kind, express
           or implied, to the maximum extent permitted by law.
         </p>
         <p className="mt-3 text-sm text-slate-300">
@@ -283,7 +318,7 @@ export default function TermsPage() {
           consumers resident in the European Union may also be entitled to bring proceedings in
           the courts of their own country of residence under applicable EU consumer-protection
           law. If you are an EU consumer, you may also submit a complaint through the European
-          Commission's Online Dispute Resolution platform at{" "}
+          Commission&apos;s Online Dispute Resolution platform at{" "}
           <a
             href="https://ec.europa.eu/consumers/odr"
             target="_blank"
@@ -295,12 +330,13 @@ export default function TermsPage() {
           .
         </p>
         <p className="mt-3 text-sm text-slate-300">
-          Company details: Socials Wick is operated by{" "}
-          <strong>[Legal entity name], a company registered in the Republic of Cyprus under
-          registration number [HE-XXXXXX]</strong>, with its registered office at{" "}
-          <strong>[registered address], Cyprus</strong>. For questions about these Terms, contact{" "}
-          <a href="mailto:legal@socialswick.com" className="text-brand hover:underline">
-            legal@socialswick.com
+          Company details: Socials Wick is operated by <strong>{COMPANY.legalName}</strong>, a
+          company registered in the Republic of Cyprus under registration number{" "}
+          <strong>{COMPANY.registrationNumber}</strong>, VAT number{" "}
+          <strong>{COMPANY.vatNumber}</strong>, with its registered office at{" "}
+          <strong>{COMPANY.address}</strong>. For questions about these Terms, contact{" "}
+          <a href={`mailto:${COMPANY.legalEmail}`} className="text-brand hover:underline">
+            {COMPANY.legalEmail}
           </a>
           .
         </p>

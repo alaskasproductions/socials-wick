@@ -26,6 +26,9 @@ export async function registerAction(
   if (password.length < 6) {
     return { error: "Password must be at least 6 characters." };
   }
+  if (formData.get("acceptTerms") !== "on") {
+    return { error: "You must accept the Terms & Conditions, Privacy Policy and Refund Policy to create an account." };
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -34,7 +37,7 @@ export async function registerAction(
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role: "CUSTOMER", balance: 0 },
+    data: { name, email, passwordHash, role: "CUSTOMER", balance: 0, termsAcceptedAt: new Date() },
   });
 
   await sendVerificationEmail(user);

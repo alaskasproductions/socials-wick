@@ -47,6 +47,33 @@ export default function RegisterPage() {
             className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 text-foreground placeholder:text-slate-400 px-3 py-2 text-sm focus:border-brand focus:outline-none"
           />
         </div>
+        <label className="flex items-start gap-3 text-sm text-slate-300">
+          <input
+            name="acceptTerms"
+            type="checkbox"
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/5 accent-[var(--brand)]"
+          />
+          <span>
+            I have read and accept the{" "}
+            <Link href="/terms" target="_blank" className="font-semibold text-brand hover:underline">
+              Terms &amp; Conditions
+            </Link>
+            ,{" "}
+            <Link href="/privacy" target="_blank" className="font-semibold text-brand hover:underline">
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/refund-policy"
+              target="_blank"
+              className="font-semibold text-brand hover:underline"
+            >
+              Refund Policy
+            </Link>
+            .
+          </span>
+        </label>
         <button
           type="submit"
           disabled={pending}

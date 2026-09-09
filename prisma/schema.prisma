@@ -43,6 +43,8 @@ model User {
   totpSecret              String?
   totpEnabled             Boolean                  @default(false)
   totpEnabledAt           DateTime?
+  // When the user ticked the Terms/Privacy/Refund acceptance box at registration.
+  termsAcceptedAt         DateTime?
   createdAt               DateTime                 @default(now())
   orders                  Order[]
   fundRequests            FundRequest[]
