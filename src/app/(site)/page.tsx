@@ -40,7 +40,7 @@ const FAQS = [
   },
   {
     q: "Do you offer an API?",
-    a: "Yes, every account includes a personal API key for automated order management, perfect for agencies and resellers.",
+    a: "Yes. API access is available for agencies and resellers who want to automate order management — contact our support team from your account and we will enable it and send you the documentation.",
   },
   {
     q: "What payment methods are supported?",
