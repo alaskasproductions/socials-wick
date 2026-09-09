@@ -7,7 +7,8 @@ export default async function NewOrderPage() {
     orderBy: { position: "asc" },
   });
 
-  const catalog = categories.map((c) => ({
+  // Categories without an active service would be dead entries in the form's dropdown.
+  const catalog = categories.filter((c) => c.services.length > 0).map((c) => ({
     id: c.id,
     name: c.name,
     services: c.services.map((s) => ({
