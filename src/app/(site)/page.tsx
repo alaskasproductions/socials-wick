@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Reveal from "@/components/Reveal";
+import Storefront from "@/components/storefront/Storefront";
+import { buildStorefront } from "@/lib/packages";
+import { auth } from "@/lib/auth";
 
 const CATEGORY_ICONS: Record<string, string> = {
   instagram: "📸",
@@ -49,14 +52,37 @@ const FAQS = [
 ];
 
 export default async function HomePage() {
-  const [categories, serviceCount] = await Promise.all([
+  const [categories, serviceCount, storeServices, session] = await Promise.all([
     prisma.category.findMany({
       include: { services: { where: { active: true }, take: 3 } },
       orderBy: { position: "asc" },
       take: 4,
     }),
     prisma.service.count({ where: { active: true } }),
+    prisma.service.findMany({
+      where: { active: true },
+      select: { id: true, name: true, rate: true, min: true, max: true, category: { select: { name: true } } },
+    }),
+    auth(),
   ]);
+  const sections = buildStorefront(
+    storeServices.map((s) => ({
+      id: s.id,
+      name: s.name,
+      categoryName: s.category.name,
+      rate: s.rate,
+      min: s.min,
+      max: s.max,
+    }))
+  );
+  const viewerUser = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true, balance: true } })
+    : null;
+  const viewer = {
+    signedIn: Boolean(viewerUser),
+    email: viewerUser?.email ?? null,
+    balance: viewerUser?.balance ?? 0,
+  };
 
   return (
     <div>
@@ -143,6 +169,9 @@ export default async function HomePage() {
           </div>
         </section>
       </Reveal>
+
+      {/* Storefront: per-platform packages + price calculator + checkout */}
+      <Storefront sections={sections} viewer={viewer} />
 
       {/* Popular services */}
       <section className="mx-auto max-w-6xl px-4 py-24">

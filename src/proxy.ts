@@ -5,6 +5,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const role = req.auth?.user?.role;
 
+  // Viva sends every paying customer back here, including guests who checked
+  // out from the landing page without an account — the page itself copes
+  // with a missing session.
+  if (pathname === "/dashboard/funds/callback") return;
+
   if (pathname.startsWith("/admin") && role !== "ADMIN") {
     return NextResponse.redirect(new URL("/login", req.url));
   }

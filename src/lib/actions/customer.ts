@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { OrderError, placeOrder } from "@/lib/orders";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import * as provider from "@/lib/providers/morethanpanel";
 import * as viva from "@/lib/providers/viva";
 import * as stripe from "@/lib/providers/stripe";
 import * as notify from "@/lib/notifications";
@@ -18,90 +18,17 @@ export async function placeOrderAction(
   const session = await auth();
   if (!session?.user) return { error: "You must be logged in." };
 
-  const serviceId = String(formData.get("serviceId") ?? "");
-  const link = String(formData.get("link") ?? "").trim();
-  const quantity = Number(formData.get("quantity") ?? 0);
-
-  if (!serviceId || !link || !quantity) {
-    return { error: "All fields are required." };
+  try {
+    await placeOrder({
+      userId: session.user.id,
+      serviceId: String(formData.get("serviceId") ?? ""),
+      link: String(formData.get("link") ?? "").trim(),
+      quantity: Number(formData.get("quantity") ?? 0),
+    });
+  } catch (err) {
+    if (err instanceof OrderError) return { error: err.message };
+    throw err;
   }
-
-  const service = await prisma.service.findUnique({ where: { id: serviceId } });
-  if (!service || !service.active) return { error: "Service not found." };
-
-  if (quantity < service.min || quantity > service.max) {
-    return {
-      error: `Quantity must be between ${service.min} and ${service.max}.`,
-    };
-  }
-
-  const charge = Math.round((quantity / 1000) * service.rate * 100) / 100;
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) return { error: "User not found." };
-  if (user.balance < charge) {
-    return { error: "Insufficient balance. Please add funds first." };
-  }
-
-  const [, order] = await prisma.$transaction([
-    prisma.user.update({
-      where: { id: user.id },
-      data: { balance: { decrement: charge } },
-    }),
-    prisma.order.create({
-      data: {
-        userId: user.id,
-        serviceId: service.id,
-        link,
-        quantity,
-        charge,
-        remains: quantity,
-        status: "PENDING",
-      },
-    }),
-  ]);
-
-  // Forward to the MoreThanPanel provider for fulfillment, if this service is
-  // sourced from them. Failures don't block the order — the customer has
-  // already paid, so an admin can retry delivery from /admin/orders.
-  if (service.providerServiceId) {
-    try {
-      const result = await provider.addOrder({
-        serviceId: service.providerServiceId,
-        link,
-        quantity,
-      });
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { providerOrderId: String(result.order), providerError: null },
-      });
-    } catch (err) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          providerError: err instanceof Error ? err.message : "Unknown provider error",
-        },
-      });
-    }
-  }
-
-  await Promise.all([
-    notify.notifyAdminNewOrder({
-      customerName: user.name,
-      customerEmail: user.email,
-      serviceName: service.name,
-      quantity,
-      charge,
-      link,
-    }),
-    notify.notifyCustomerOrderConfirmation({
-      customerEmail: user.email,
-      customerName: user.name,
-      serviceName: service.name,
-      quantity,
-      charge,
-    }),
-  ]);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/orders");

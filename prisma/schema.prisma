@@ -124,6 +124,12 @@ model FundRequest {
   vivaOrderCode     String?    @unique // Viva Smart Checkout payment order code
   vivaTransactionId String?    @unique // Viva transaction id once paid
   stripeSessionId   String?    @unique // Stripe Checkout session id
+  // Storefront checkout: when set, the order below is placed automatically
+  // as soon as this payment is confirmed (guest or signed-in customer).
+  checkoutServiceId String?
+  checkoutQuantity  Int?
+  checkoutLink      String?
+  checkoutOrderId   String?    @unique // Order created from this checkout
   createdAt         DateTime   @default(now())
 }
 
