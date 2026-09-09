@@ -37,7 +37,7 @@ export default function NewOrderWorkspace({ categories }: { categories: CatalogC
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] xl:max-w-6xl">
       <ServiceBrowser categories={categories} selectedServiceId={serviceId} onPick={pick} />
       <div id="order-form" className="scroll-mt-24 lg:sticky lg:top-6 lg:self-start">
         <div className="glass rounded-xl p-6">

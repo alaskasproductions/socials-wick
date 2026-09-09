@@ -89,23 +89,23 @@ export default function ServiceBrowser({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-3xl space-y-3">
       {/* Legend card */}
-      <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/20 text-brand">🎨</span>
+      <div className="glass flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+          <span className="grid h-6 w-6 place-items-center rounded-md bg-brand/20 text-xs text-brand">🎨</span>
           SocialsWick Service Color Categorization System
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           {(["basic", "medium", "elite"] as Tier[]).map((t) => (
-            <span key={t} className={`rounded-full px-2.5 py-1 font-semibold ${TIERS[t].className}`}>
+            <span key={t} className={`rounded-full px-2 py-0.5 font-semibold ${TIERS[t].className}`}>
               {TIERS[t].dot} {TIERS[t].label}
             </span>
           ))}
           <button
             type="button"
             onClick={() => setDetailsOpen(true)}
-            className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark"
+            className="rounded-md bg-brand px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-brand-dark"
           >
             See Details →
           </button>
@@ -113,13 +113,13 @@ export default function ServiceBrowser({
       </div>
 
       {/* Tier tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {TIER_TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTier(t.key)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
               tier === t.key
                 ? "bg-brand text-white"
                 : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
@@ -131,11 +131,11 @@ export default function ServiceBrowser({
       </div>
 
       {/* Platform chips + kind filter + search */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
           onClick={() => setPlatform("all")}
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
             platform === "all" ? "bg-white/15 text-foreground" : "bg-white/5 text-slate-400 hover:text-foreground"
           }`}
         >
@@ -146,7 +146,7 @@ export default function ServiceBrowser({
             key={p.key}
             type="button"
             onClick={() => setPlatform(p.key)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
               platform === p.key ? "bg-white/15 text-foreground" : "bg-white/5 text-slate-400 hover:text-foreground"
             }`}
           >
@@ -160,7 +160,7 @@ export default function ServiceBrowser({
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as ServiceKindKey | "all")}
-          className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
+          className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-foreground focus:border-brand focus:outline-none"
         >
           <option value="all">Filter: any service type</option>
           {SERVICE_KINDS.map((k) => (
@@ -173,17 +173,17 @@ export default function ServiceBrowser({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search services…"
-          className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-slate-500 focus:border-brand focus:outline-none"
+          className="flex-1 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-foreground placeholder:text-slate-500 focus:border-brand focus:outline-none"
         />
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-[11px] text-slate-500">
         {filtered.length} categor{filtered.length === 1 ? "y" : "ies"} · {totalServices} service
         {totalServices === 1 ? "" : "s"}
       </p>
 
       {/* Category accordions */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {filtered.length === 0 && (
           <p className="rounded-lg bg-white/5 px-4 py-6 text-center text-sm text-slate-500">
             Nothing matches these filters.
@@ -193,17 +193,17 @@ export default function ServiceBrowser({
           const isOpen = searching || openIds.has(c.id);
           const t = TIERS[c.tier];
           return (
-            <div key={c.id} className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
+            <div key={c.id} className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
               <button
                 type="button"
                 onClick={() => toggle(c.id)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-100 hover:bg-white/5"
+                className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-100 hover:bg-white/5"
               >
                 <span className="flex items-center gap-2">
                   {t.dot && <span>{t.dot}</span>}
                   <span>{c.label}</span>
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-slate-400">
+                  <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
                     {c.services.length}
                   </span>
                 </span>
@@ -211,14 +211,14 @@ export default function ServiceBrowser({
               </button>
               {isOpen && (
                 <div className="overflow-x-auto border-t border-white/10">
-                  <table className="w-full min-w-[560px] text-left text-sm">
-                    <thead className="bg-black/20 text-xs uppercase tracking-wide text-slate-500">
+                  <table className="w-full min-w-[520px] text-left text-xs">
+                    <thead className="bg-black/20 text-[10px] uppercase tracking-wide text-slate-500">
                       <tr>
-                        <th className="px-4 py-2 font-medium">Service</th>
-                        <th className="px-4 py-2 font-medium">Rate / 1000</th>
-                        <th className="px-4 py-2 font-medium">Min</th>
-                        <th className="px-4 py-2 font-medium">Max</th>
-                        <th className="px-4 py-2" />
+                        <th className="px-3 py-1.5 font-medium">Service</th>
+                        <th className="px-3 py-1.5 font-medium">Rate / 1000</th>
+                        <th className="px-3 py-1.5 font-medium">Min</th>
+                        <th className="px-3 py-1.5 font-medium">Max</th>
+                        <th className="px-3 py-1.5" />
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -226,29 +226,29 @@ export default function ServiceBrowser({
                         const active = s.id === selectedServiceId;
                         return (
                           <tr key={s.id} className={active ? "bg-brand/10" : undefined}>
-                            <td className="px-4 py-2.5 text-slate-200">
+                            <td className="px-3 py-2 text-slate-200">
                               <div>{displayName(s.name)}</div>
                               {s.description && (
                                 <details className="mt-1">
-                                  <summary className="cursor-pointer text-xs text-brand hover:underline">
+                                  <summary className="cursor-pointer text-[11px] text-brand hover:underline">
                                     Description
                                   </summary>
-                                  <p className="mt-1 whitespace-pre-line text-xs text-slate-400">
+                                  <p className="mt-1 whitespace-pre-line text-[11px] text-slate-400">
                                     {displayName(s.description)}
                                   </p>
                                 </details>
                               )}
                             </td>
-                            <td className="whitespace-nowrap px-4 py-2.5 font-semibold text-brand">
+                            <td className="whitespace-nowrap px-3 py-2 font-semibold text-brand">
                               €{s.rate.toFixed(2)}
                             </td>
-                            <td className="px-4 py-2.5 text-slate-400">{s.min.toLocaleString("de-DE")}</td>
-                            <td className="px-4 py-2.5 text-slate-400">{s.max.toLocaleString("de-DE")}</td>
-                            <td className="px-4 py-2.5 text-right">
+                            <td className="px-3 py-2 text-slate-400">{s.min.toLocaleString("de-DE")}</td>
+                            <td className="px-3 py-2 text-slate-400">{s.max.toLocaleString("de-DE")}</td>
+                            <td className="px-3 py-2 text-right">
                               <button
                                 type="button"
                                 onClick={() => onPick(c.id, s.id)}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold ${
                                   active
                                     ? "bg-brand text-white"
                                     : "border border-white/15 bg-white/5 text-slate-200 hover:bg-white/10"
