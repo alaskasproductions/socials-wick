@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { toggleUserStatusAction } from "@/lib/actions/admin";
+import { resetUserTotpAction, toggleUserStatusAction } from "@/lib/actions/admin";
 import AdjustBalanceForm from "./AdjustBalanceForm";
 
 export default async function AdminUsersPage() {
@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
     <div>
       <h2 className="text-xl font-bold text-foreground">Users</h2>
       <div className="mt-4 overflow-x-auto rounded-xl glass">
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-left text-sm">
           <thead className="bg-white/5 text-slate-400">
             <tr>
               <th className="px-5 py-3 font-medium">Name</th>
@@ -21,6 +21,7 @@ export default async function AdminUsersPage() {
               <th className="px-5 py-3 font-medium">Balance</th>
               <th className="px-5 py-3 font-medium">Orders</th>
               <th className="px-5 py-3 font-medium">Status</th>
+              <th className="px-5 py-3 font-medium">2FA</th>
               <th className="px-5 py-3 font-medium">Adjust Balance</th>
               <th className="px-5 py-3 font-medium" />
             </tr>
@@ -44,6 +45,24 @@ export default async function AdminUsersPage() {
                   </span>
                 </td>
                 <td className="px-5 py-3">
+                  {u.totpEnabled ? (
+                    <form action={resetUserTotpAction} className="flex items-center gap-2">
+                      <input type="hidden" name="id" value={u.id} />
+                      <span className="rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-semibold text-green-400">
+                        On
+                      </span>
+                      <button
+                        className="text-xs font-semibold text-slate-400 hover:text-red-400 hover:underline"
+                        title="Remove the authenticator from this account (e.g. lost phone)"
+                      >
+                        Reset
+                      </button>
+                    </form>
+                  ) : (
+                    <span className="text-xs text-slate-500">Off</span>
+                  )}
+                </td>
+                <td className="px-5 py-3">
                   <AdjustBalanceForm userId={u.id} />
                 </td>
                 <td className="px-5 py-3 text-right">
@@ -58,7 +77,7 @@ export default async function AdminUsersPage() {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-5 py-6 text-center text-slate-500">
+                <td colSpan={8} className="px-5 py-6 text-center text-slate-500">
                   No customers yet.
                 </td>
               </tr>

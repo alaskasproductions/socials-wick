@@ -38,6 +38,11 @@ model User {
   apiKey                  String                   @unique @default(cuid())
   status                  String                   @default("ACTIVE") // ACTIVE | BANNED
   emailVerifiedAt         DateTime?
+  // Authenticator-app (TOTP) second factor. Secret is AES-GCM encrypted with
+  // AUTH_SECRET; a secret with totpEnabled=false is a pending, unconfirmed setup.
+  totpSecret              String?
+  totpEnabled             Boolean                  @default(false)
+  totpEnabledAt           DateTime?
   createdAt               DateTime                 @default(now())
   orders                  Order[]
   fundRequests            FundRequest[]

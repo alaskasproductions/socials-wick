@@ -1,9 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
+import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { PREAUTH_COOKIE, PREAUTH_TTL_SECONDS, signPreauth } from "@/lib/totp";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -23,10 +26,26 @@ export default async function LoginPage({
       .trim()
       .toLowerCase();
 
-    try {
-      const user = await prisma.user.findUnique({ where: { email } });
-      const destination = user && !user.emailVerifiedAt ? "/verify-email/pending" : "/";
+    const user = await prisma.user.findUnique({ where: { email } });
+    const destination = user && !user.emailVerifiedAt ? "/verify-email/pending" : "/";
 
+    if (user && user.totpEnabled && user.status !== "BANNED") {
+      // Authenticator enabled: check the password here, then hand over to the
+      // 2FA step with a short-lived signed token instead of creating a session.
+      const valid = await bcrypt.compare(String(formData.get("password") ?? ""), user.passwordHash);
+      if (!valid) redirect("/login?error=1");
+      const cookieStore = await cookies();
+      cookieStore.set(PREAUTH_COOKIE, signPreauth(user.id), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: PREAUTH_TTL_SECONDS,
+      });
+      redirect("/login/2fa");
+    }
+
+    try {
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),

@@ -202,6 +202,16 @@ export async function toggleUserStatusAction(formData: FormData): Promise<void> 
   revalidatePath("/admin/users");
 }
 
+export async function resetUserTotpAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  await prisma.user.updateMany({
+    where: { id },
+    data: { totpSecret: null, totpEnabled: false, totpEnabledAt: null },
+  });
+  revalidatePath("/admin/users");
+}
+
 // ---- Fund requests ----
 
 export async function reviewFundRequestAction(formData: FormData): Promise<void> {
