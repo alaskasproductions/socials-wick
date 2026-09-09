@@ -1,15 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState, useActionState } from "react";
-import { importProviderServicesAction } from "@/lib/actions/provider";
+import { useMemo, useState, useActionState, useTransition } from "react";
+import { importProviderServicesAction, saveMarkupAction } from "@/lib/actions/provider";
 import type { ProviderService } from "@/lib/providers/morethanpanel";
 
 const PAGE_SIZE = 50;
 
-export default function ImportServicesForm({ services }: { services: ProviderService[] }) {
+export default function ImportServicesForm({
+  services,
+  defaultMarkup,
+}: {
+  services: ProviderService[];
+  defaultMarkup: number;
+}) {
   const [state, formAction, pending] = useActionState(importProviderServicesAction, undefined);
   const [query, setQuery] = useState("");
-  const [markup, setMarkup] = useState(30);
+  // Prefilled with the saved markup; only changes when the admin edits it.
+  const [markup, setMarkup] = useState(defaultMarkup);
+  const [savedMarkup, setSavedMarkup] = useState(defaultMarkup);
+  const [markupMsg, setMarkupMsg] = useState<string | null>(null);
+  const [savingMarkup, startSavingMarkup] = useTransition();
+  const markupDirty = markup !== savedMarkup;
+
+  function saveMarkup() {
+    startSavingMarkup(async () => {
+      const fd = new FormData();
+      fd.set("markupPercent", String(markup));
+      const result = await saveMarkupAction(undefined, fd);
+      if (result?.error) {
+        setMarkupMsg(result.error);
+      } else {
+        setSavedMarkup(markup);
+        setMarkupMsg(result?.success ?? "Saved.");
+      }
+    });
+  }
   const [page, setPage] = useState(0);
 
   const filtered = useMemo(() => {
@@ -31,11 +56,6 @@ export default function ImportServicesForm({ services }: { services: ProviderSer
   const currentPage = Math.min(page, pageCount - 1);
   const pageItems = filtered.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE);
 
-  // Jump back to page 1 whenever the search term changes, instead of
-  // silently landing on an out-of-range page for the new result set.
-  useEffect(() => {
-    setPage(0);
-  }, [query]);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -49,7 +69,12 @@ export default function ImportServicesForm({ services }: { services: ProviderSer
       <div className="flex flex-wrap items-center gap-4">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            // Jump back to page 1 whenever the search term changes, instead of
+            // silently landing on an out-of-range page for the new result set.
+            setPage(0);
+          }}
           placeholder="Search services or categories…"
           className="flex-1 min-w-[200px] rounded-lg border border-white/15 bg-white/5 text-foreground placeholder:text-slate-400 px-3 py-2 text-sm focus:border-brand focus:outline-none"
         />
@@ -58,10 +83,26 @@ export default function ImportServicesForm({ services }: { services: ProviderSer
           <input
             name="markupPercent"
             type="number"
+            min={0}
+            max={1000}
+            step="0.5"
             value={markup}
-            onChange={(e) => setMarkup(Number(e.target.value))}
+            onChange={(e) => {
+              setMarkup(Number(e.target.value));
+              setMarkupMsg(null);
+            }}
             className="w-20 rounded-lg border border-white/15 bg-white/5 text-foreground placeholder:text-slate-400 px-2 py-1 text-sm focus:border-brand focus:outline-none"
           />
+          <button
+            type="button"
+            onClick={saveMarkup}
+            disabled={savingMarkup || !markupDirty}
+            title={markupDirty ? "Remember this markup for next time" : "Markup is saved"}
+            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-40"
+          >
+            {savingMarkup ? "Saving…" : markupDirty ? "Save" : "Saved"}
+          </button>
+          {markupMsg && <span className="text-xs text-slate-400">{markupMsg}</span>}
         </label>
         <button
           type="submit"

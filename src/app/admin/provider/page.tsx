@@ -9,7 +9,7 @@ import MtpSettingsForm from "./MtpSettingsForm";
 export default async function AdminProviderPage() {
   const [linkedCount, settings] = await Promise.all([
     prisma.service.count({ where: { providerServiceId: { not: null } } }),
-    getSettings(["mtp.apiUrl", "mtp.apiKey"]),
+    getSettings(["mtp.apiUrl", "mtp.apiKey", "mtp.markupPercent"]),
   ]);
 
   let balance: { balance: string; currency: string } | null = null;
@@ -82,11 +82,14 @@ export default async function AdminProviderPage() {
         <div>
           <h3 className="font-semibold text-foreground">Import Services</h3>
           <p className="mt-1 text-sm text-slate-400">
-            Select services to add to your catalog. Your sell price is the provider's rate plus
+            Select services to add to your catalog. Your sell price is the provider&apos;s rate plus
             the markup percentage below.
           </p>
           <div className="mt-4">
-            <ImportServicesForm services={services} />
+            <ImportServicesForm
+              services={services}
+              defaultMarkup={Number(settings["mtp.markupPercent"]) || 30}
+            />
           </div>
         </div>
       )}

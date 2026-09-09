@@ -5,6 +5,26 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import * as provider from "@/lib/providers/morethanpanel";
 import { syncPendingOrders } from "@/lib/order-sync";
+import { setSettings } from "@/lib/settings";
+
+export const DEFAULT_MARKUP_PERCENT = 30;
+export const MARKUP_SETTING_KEY = "mtp.markupPercent";
+
+function parseMarkup(raw: FormDataEntryValue | null): number | null {
+  const n = Number(raw);
+  if (raw === null || raw === "" || !Number.isFinite(n) || n < 0 || n > 1000) return null;
+  return Math.round(n * 100) / 100;
+}
+
+/** Remembers the markup % so the import form opens with it next time. */
+export async function saveMarkupAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const markup = parseMarkup(formData.get("markupPercent"));
+  if (markup === null) return { error: "Markup must be a number between 0 and 1000." };
+  await setSettings({ [MARKUP_SETTING_KEY]: String(markup) });
+  revalidatePath("/admin/provider");
+  return { success: `Markup saved: ${markup}%.` };
+}
 
 async function requireAdmin() {
   const session = await auth();
@@ -31,9 +51,11 @@ export async function importProviderServicesAction(
 ): Promise<ActionState> {
   await requireAdmin();
 
-  const markupPercent = Number(formData.get("markupPercent") ?? 30);
+  const markupPercent = parseMarkup(formData.get("markupPercent")) ?? DEFAULT_MARKUP_PERCENT;
   const selected = formData.getAll("service") as string[];
   if (selected.length === 0) return { error: "Select at least one service to import." };
+  // The markup used for an import becomes the remembered default.
+  await setSettings({ [MARKUP_SETTING_KEY]: String(markupPercent) });
 
   let services: provider.ProviderService[];
   try {
