@@ -102,12 +102,6 @@ export default async function LoginPage({
           Register
         </Link>
       </p>
-
-      <div className="mt-6 rounded-lg bg-white/5 px-4 py-3 text-xs text-slate-400">
-        Demo admin: <strong>admin@socialswick.com</strong> / <strong>admin123</strong>
-        <br />
-        Demo customer: <strong>demo@socialswick.com</strong> / <strong>demo1234</strong>
-      </div>
     </div>
     </div>
   );
