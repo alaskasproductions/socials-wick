@@ -27,7 +27,14 @@ export default async function LoginPage({
       .toLowerCase();
 
     const user = await prisma.user.findUnique({ where: { email } });
-    const destination = user && !user.emailVerifiedAt ? "/verify-email/pending" : "/";
+    // Land signed-in users on their dashboard rather than the marketing home page.
+    const destination = !user
+      ? "/"
+      : !user.emailVerifiedAt
+        ? "/verify-email/pending"
+        : user.role === "ADMIN"
+          ? "/admin"
+          : "/dashboard";
 
     if (user && user.totpEnabled && user.status !== "BANNED") {
       // Authenticator enabled: check the password here, then hand over to the

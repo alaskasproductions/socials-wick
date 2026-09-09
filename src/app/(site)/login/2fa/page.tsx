@@ -24,7 +24,11 @@ export default async function TwoFactorLoginPage({
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !user.totpEnabled) redirect("/login");
-  const destination = user.emailVerifiedAt ? "/" : "/verify-email/pending";
+  const destination = !user.emailVerifiedAt
+    ? "/verify-email/pending"
+    : user.role === "ADMIN"
+      ? "/admin"
+      : "/dashboard";
 
   async function verify(formData: FormData) {
     "use server";
