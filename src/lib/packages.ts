@@ -118,6 +118,8 @@ export function buildStorefront(input: Omit<StoreService, "tier">[]): PlatformSe
       ...raw,
       tier: serviceTier(raw.name, raw.categoryName),
       name: displayName(raw.name),
+      // Serialized into the page, so it must not carry the provider's branding either.
+      categoryName: displayName(raw.categoryName),
     };
     const key = `${platform}:${type.key}`;
     const g = groups.get(key);
