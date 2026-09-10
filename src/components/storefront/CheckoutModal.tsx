@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { startCheckoutAction } from "@/lib/actions/checkout";
 import { normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
+import QualityPicker from "./QualityPicker";
 import { PLATFORMS, type PlatformKey } from "@/lib/catalog";
 
 export type Viewer = { signedIn: boolean; email: string | null; balance: number };
 
-export type CheckoutRequest = { platform: PlatformKey; typeKey: string; quantity: number };
+export type CheckoutRequest = { platform: PlatformKey; typeKey: string; quantity: number; serviceId?: string };
 
 const STEPS = [
   { key: "service", icon: "🛍️", label: "Service" },
@@ -49,7 +50,7 @@ export default function CheckoutModal({
 
   if (!request) return null;
   // Remount the wizard for every new request so its state starts fresh.
-  const key = `${request.platform}:${request.typeKey}:${request.quantity}`;
+  const key = `${request.platform}:${request.typeKey}:${request.quantity}:${request.serviceId ?? ""}`;
   return <Wizard key={key} sections={sections} viewer={viewer} request={request} onClose={onClose} />;
 }
 
@@ -67,6 +68,7 @@ function Wizard({
   const [step, setStep] = useState(0);
   const [platform] = useState<PlatformKey>(request.platform);
   const [typeKey, setTypeKey] = useState(request.typeKey);
+  const [serviceId, setServiceId] = useState<string | null>(request.serviceId ?? null);
   const [quantity, setQuantity] = useState(request.quantity);
   const [confirmedQty, setConfirmedQty] = useState<number | null>(request.quantity);
   const [linkInput, setLinkInput] = useState("");
@@ -79,7 +81,7 @@ function Wizard({
   const section = useMemo(() => sections.find((s) => s.key === platform), [sections, platform]);
   const types: ServiceType[] = section?.types ?? [];
   const type = types.find((t) => t.key === typeKey) ?? types[0];
-  const service = type?.service;
+  const service = type?.options.find((o) => o.id === serviceId) ?? type?.service;
   const platformMeta = PLATFORMS.find((p) => p.key === platform);
   const price = service && confirmedQty ? priceFor(service.rate, confirmedQty) : 0;
   const link = normalizeLink(platform, linkInput);
@@ -232,6 +234,7 @@ function Wizard({
                         value={type.key}
                         onChange={(e) => {
                           setTypeKey(e.target.value);
+                          setServiceId(null);
                           setConfirmedQty(null);
                         }}
                         className={inputClass}
@@ -271,6 +274,18 @@ function Wizard({
                       </p>
                     </div>
                   </div>
+
+                  {type.options.length > 1 && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium text-slate-200">Quality</p>
+                      <QualityPicker
+                        options={type.options}
+                        selectedId={service.id}
+                        onSelect={(s) => setServiceId(s.id)}
+                        compact
+                      />
+                    </div>
+                  )}
 
                   {confirmedQty && (
                     <div className="grid gap-4 sm:grid-cols-[220px_1fr]">

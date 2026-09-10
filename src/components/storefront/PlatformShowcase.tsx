@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { PlatformSection } from "@/lib/packages";
+import { buildPackages, type PlatformSection, type StoreService } from "@/lib/packages";
+import QualityPicker from "./QualityPicker";
 import type { CheckoutRequest } from "./CheckoutModal";
 
 export default function PlatformShowcase({
@@ -12,8 +13,11 @@ export default function PlatformShowcase({
   onBuy: (req: CheckoutRequest) => void;
 }) {
   const [typeKey, setTypeKey] = useState(section.types[0]?.key ?? "");
+  const [chosen, setChosen] = useState<Record<string, string>>({}); // typeKey -> serviceId
   const type = section.types.find((t) => t.key === typeKey) ?? section.types[0];
   if (!type) return null;
+  const service: StoreService = type.options.find((o) => o.id === chosen[type.key]) ?? type.service;
+  const packages = service.id === type.service.id ? type.packages : buildPackages(service);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16" id={`store-${section.key}`}>
@@ -54,11 +58,21 @@ export default function PlatformShowcase({
         Buy {section.label} <span className="underline decoration-brand decoration-2 underline-offset-4">{type.label}</span>
       </h3>
       <p className="mx-auto mt-2 max-w-2xl text-center text-xs text-slate-500">
-        {type.service.name} · from €{type.service.rate.toFixed(2)} per 1000
+        {service.name} · €{service.rate.toFixed(2)} per 1000
       </p>
 
+      {type.options.length > 1 && (
+        <div className="mt-4">
+          <QualityPicker
+            options={type.options}
+            selectedId={service.id}
+            onSelect={(s) => setChosen((c) => ({ ...c, [type.key]: s.id }))}
+          />
+        </div>
+      )}
+
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {type.packages.map((pkg) => (
+        {packages.map((pkg) => (
           <div
             key={pkg.quantity}
             className={`relative flex flex-col rounded-2xl border p-5 transition hover:-translate-y-1 ${
@@ -88,7 +102,9 @@ export default function PlatformShowcase({
             </div>
             <button
               type="button"
-              onClick={() => onBuy({ platform: section.key, typeKey: type.key, quantity: pkg.quantity })}
+              onClick={() =>
+                onBuy({ platform: section.key, typeKey: type.key, quantity: pkg.quantity, serviceId: service.id })
+              }
               className={`mt-4 flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wide text-white ${
                 pkg.bestOffer ? "bg-brand hover:bg-brand-dark" : "bg-black hover:bg-black/70"
               }`}

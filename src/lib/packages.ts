@@ -1,6 +1,6 @@
 // Builds the landing-page storefront (platform sections, service types and
 // package cards) from the live catalog. Pure functions — safe on server and client.
-import { PLATFORMS, displayName, platformOf, type PlatformKey } from "@/lib/catalog";
+import { PLATFORMS, TIERS, displayName, platformOf, serviceTier, type PlatformKey, type Tier } from "@/lib/catalog";
 
 export type StoreService = {
   id: string;
@@ -9,15 +9,31 @@ export type StoreService = {
   rate: number; // € per 1000
   min: number;
   max: number;
+  tier: Tier;
 };
 
 export type ServiceType = {
   key: string;
   label: string; // e.g. "Followers"
   icon: string;
-  service: StoreService; // the representative (cheapest) service for this platform+type
+  service: StoreService; // default (cheapest) service for this platform+type
+  options: StoreService[]; // every service of this type, ordered basic → medium → elite
   packages: Package[];
 };
+
+const TIER_ORDER: Tier[] = ["basic", "medium", "elite", "standard"];
+
+/** Short label for a quality option, e.g. "🟢 Medium". */
+export function tierLabel(tier: Tier): string {
+  const t = TIERS[tier];
+  return t.dot ? `${t.dot} ${t.label}` : t.label;
+}
+
+export function sortByTier<T extends { tier: Tier; rate: number }>(items: T[]): T[] {
+  return [...items].sort(
+    (a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) || a.rate - b.rate
+  );
+}
 
 export type Package = {
   quantity: number;
@@ -87,32 +103,46 @@ export function buildPackages(service: StoreService): Package[] {
   });
 }
 
-export function buildStorefront(services: StoreService[]): PlatformSection[] {
-  // Cheapest active service per (platform, type).
-  const best = new Map<string, { platform: PlatformKey; type: NonNullable<ReturnType<typeof typeOf>>; service: StoreService }>();
-  for (const s of services) {
-    const platform = platformOf(`${s.categoryName} ${s.name}`);
+export function buildStorefront(input: Omit<StoreService, "tier">[]): PlatformSection[] {
+  // Every active service grouped by (platform, type); the cheapest is the default.
+  const groups = new Map<
+    string,
+    { platform: PlatformKey; type: NonNullable<ReturnType<typeof typeOf>>; services: StoreService[] }
+  >();
+  for (const raw of input) {
+    const platform = platformOf(`${raw.categoryName} ${raw.name}`);
     if (platform === "other") continue;
-    const type = typeOf(s.name);
+    const type = typeOf(raw.name);
     if (!type) continue;
+    const s: StoreService = {
+      ...raw,
+      tier: serviceTier(raw.name, raw.categoryName),
+      name: displayName(raw.name),
+    };
     const key = `${platform}:${type.key}`;
-    const current = best.get(key);
-    if (!current || s.rate < current.service.rate) best.set(key, { platform, type, service: s });
+    const g = groups.get(key);
+    if (g) g.services.push(s);
+    else groups.set(key, { platform, type, services: [s] });
   }
 
   const sections: PlatformSection[] = [];
   for (const p of PLATFORMS) {
     if (p.key === "other") continue;
-    const types = [...best.values()]
-      .filter((b) => b.platform === p.key)
+    const types = [...groups.values()]
+      .filter((g) => g.platform === p.key)
       .sort((a, b) => TYPES.findIndex((t) => t.key === a.type.key) - TYPES.findIndex((t) => t.key === b.type.key))
-      .map((b) => ({
-        key: b.type.key,
-        label: b.type.label,
-        icon: b.type.icon,
-        service: { ...b.service, name: displayName(b.service.name) },
-        packages: buildPackages(b.service),
-      }))
+      .map((g) => {
+        const options = sortByTier(g.services);
+        const service = [...options].sort((a, b) => a.rate - b.rate)[0];
+        return {
+          key: g.type.key,
+          label: g.type.label,
+          icon: g.type.icon,
+          service,
+          options,
+          packages: buildPackages(service),
+        };
+      })
       .filter((t) => t.packages.length > 0);
     if (types.length > 0) sections.push({ key: p.key, label: p.label, icon: p.icon, types });
   }

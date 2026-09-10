@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { priceFor, type PlatformSection } from "@/lib/packages";
+import { priceFor, type PlatformSection, type StoreService } from "@/lib/packages";
+import QualityPicker from "./QualityPicker";
 import type { PlatformKey } from "@/lib/catalog";
 import type { CheckoutRequest } from "./CheckoutModal";
 
@@ -16,7 +17,10 @@ export default function PriceCalculator({
   const section = useMemo(() => sections.find((s) => s.key === platform) ?? sections[0], [sections, platform]);
   const [typeKey, setTypeKey] = useState(section?.types[0]?.key ?? "");
   const type = section?.types.find((t) => t.key === typeKey) ?? section?.types[0];
-  const service = type?.service;
+  const [chosen, setChosen] = useState<Record<string, string>>({}); // "platform:type" -> serviceId
+  const chosenKey = section && type ? `${section.key}:${type.key}` : "";
+  const service: StoreService | undefined =
+    type?.options.find((o) => o.id === chosen[chosenKey]) ?? type?.service;
 
   if (!section || !type || !service) return null;
 
@@ -69,10 +73,26 @@ export default function PriceCalculator({
           ))}
         </div>
 
+        {type.options.length > 1 && (
+          <>
+            <p className="mt-6 text-sm font-semibold text-foreground">Quality</p>
+            <div className="mt-3">
+              <QualityPicker
+                options={type.options}
+                selectedId={service.id}
+                onSelect={(s) => setChosen((c) => ({ ...c, [chosenKey]: s.id }))}
+                compact
+              />
+            </div>
+          </>
+        )}
+
         <QuantityPicker
           key={service.id}
           service={service}
-          onPurchase={(quantity) => onPurchase({ platform: section.key, typeKey: type.key, quantity })}
+          onPurchase={(quantity) =>
+            onPurchase({ platform: section.key, typeKey: type.key, quantity, serviceId: service.id })
+          }
         />
       </div>
     </section>
@@ -83,7 +103,7 @@ function QuantityPicker({
   service,
   onPurchase,
 }: {
-  service: PlatformSection["types"][number]["service"];
+  service: StoreService;
   onPurchase: (quantity: number) => void;
 }) {
   const [quantity, setQuantity] = useState(
