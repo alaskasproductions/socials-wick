@@ -11,6 +11,7 @@ import { OrderError, orderCharge, placeOrder } from "@/lib/orders";
 import { displayName } from "@/lib/catalog";
 import { MIN_ORDER_EUR } from "@/lib/packages";
 import { linkRuleFor } from "@/lib/link-rules";
+import { pushAdminNotification } from "@/lib/admin-notify";
 
 export type CheckoutInput = {
   serviceId: string;
@@ -60,6 +61,13 @@ async function findOrCreateGuestUser(email: string, origin: string) {
         create: { tokenHash, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
       },
     },
+  });
+
+  await pushAdminNotification({
+    type: "USER",
+    title: `New customer via checkout — ${email}`,
+    body: "Guest account created from the landing-page checkout; a set-password email was sent.",
+    href: "/admin/users",
   });
 
   const setPasswordUrl = `${origin}/reset-password?token=${rawToken}`;

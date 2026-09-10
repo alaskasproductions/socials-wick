@@ -3,6 +3,7 @@ import * as provider from "@/lib/providers/morethanpanel";
 import * as notify from "@/lib/notifications";
 import { displayName } from "@/lib/catalog";
 import { linkRuleFor } from "@/lib/link-rules";
+import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 
 export class OrderError extends Error {}
 
@@ -68,12 +69,26 @@ export async function placeOrder(params: {
         data: { providerOrderId: String(result.order), providerError: null },
       });
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown provider error";
       await prisma.order.update({
         where: { id: order.id },
-        data: { providerError: err instanceof Error ? err.message : "Unknown provider error" },
+        data: { providerError: message },
+      });
+      await pushAdminNotification({
+        type: "ORDER_FAILED",
+        title: `Order not sent to provider — ${displayName(service.name)}`,
+        body: `${user.email} · ${quantity.toLocaleString("en-US")} × ${formatMoney(charge)}\nProvider error: ${message}\nRetry it from Admin → Orders.`,
+        href: "/admin/orders",
       });
     }
   }
+
+  await pushAdminNotification({
+    type: "ORDER",
+    title: `New order — ${quantity.toLocaleString("en-US")} × ${displayName(service.name)}`,
+    body: `${user.name} (${user.email}) · ${formatMoney(charge)} · ${link}`,
+    href: "/admin/orders",
+  });
 
   await Promise.all([
     notify.notifyAdminNewOrder({

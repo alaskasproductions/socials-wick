@@ -52,6 +52,20 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
 }
 
+// In-app notifications for the admin panel (bell + /admin/notifications).
+model AdminNotification {
+  id        String    @id @default(cuid())
+  type      String // ORDER | ORDER_FAILED | ORDER_STATUS | PAYMENT | FUND_REQUEST | USER | SYSTEM
+  title     String
+  body      String    @default("")
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([readAt])
+  @@index([createdAt])
+}
+
 model PasswordResetToken {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import * as provider from "@/lib/providers/morethanpanel";
+import { pushAdminNotification } from "@/lib/admin-notify";
+import { displayName } from "@/lib/catalog";
 
 export type SyncResult = { synced: number; total: number; error?: string };
 
@@ -13,6 +15,7 @@ export async function syncPendingOrders(): Promise<SyncResult> {
       providerOrderId: { not: null },
       status: { in: ["PENDING", "IN_PROGRESS", "PARTIAL"] },
     },
+    include: { service: { select: { name: true } }, user: { select: { email: true } } },
   });
 
   if (pending.length === 0) return { synced: 0, total: 0 };
@@ -34,15 +37,27 @@ export async function syncPendingOrders(): Promise<SyncResult> {
     const result = results[order.providerOrderId as string];
     if (!result || "error" in result) continue;
 
+    const nextStatus = provider.mapProviderStatus(result.status);
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        status: provider.mapProviderStatus(result.status),
+        status: nextStatus,
         startCount: Number(result.start_count) || order.startCount,
         remains: Number(result.remains) || order.remains,
       },
     });
     synced++;
+
+    // Tell the admin when an order finishes or goes wrong (not for every progress tick).
+    if (nextStatus !== order.status && ["COMPLETED", "PARTIAL", "CANCELLED"].includes(nextStatus)) {
+      const label = nextStatus === "COMPLETED" ? "completed" : nextStatus === "PARTIAL" ? "partially delivered" : "canceled by the provider";
+      await pushAdminNotification({
+        type: "ORDER_STATUS",
+        title: `Order ${label} — ${order.quantity.toLocaleString("en-US")} × ${displayName(order.service.name)}`,
+        body: `${order.user.email} · remains ${Number(result.remains) || 0}${nextStatus === "CANCELLED" ? "\nCheck the link/format and refund the customer if needed." : ""}`,
+        href: "/admin/orders",
+      });
+    }
   }
 
   return { synced, total: pending.length };

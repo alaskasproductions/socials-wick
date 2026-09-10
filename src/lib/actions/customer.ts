@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { OrderError, placeOrder } from "@/lib/orders";
+import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -60,6 +61,12 @@ export async function requestFundsAction(
     customerEmail: user.email,
     amount,
     method,
+  });
+  await pushAdminNotification({
+    type: "FUND_REQUEST",
+    title: `Fund request — ${formatMoney(amount)} via ${method}`,
+    body: `${user.name} (${user.email}) is waiting for approval.`,
+    href: "/admin/funds",
   });
 
   revalidatePath("/dashboard/funds");

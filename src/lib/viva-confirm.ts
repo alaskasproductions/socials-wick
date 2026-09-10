@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import * as viva from "@/lib/providers/viva";
 import * as notify from "@/lib/notifications";
 import { placeOrder } from "@/lib/orders";
+import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 
 export type ConfirmResult =
   | { status: "confirmed"; amount: number; orderId?: string; orderError?: string }
@@ -52,6 +53,14 @@ export async function confirmVivaPayment(
       customerName: user.name,
       amount: fundRequest.amount,
       method: fundRequest.method,
+    });
+    await pushAdminNotification({
+      type: "PAYMENT",
+      title: `Payment received — ${formatMoney(fundRequest.amount)} from ${user.email}`,
+      body: `${fundRequest.method} · Viva order ${orderCode} · transaction ${transactionId}${
+        fundRequest.checkoutServiceId ? "\nStorefront checkout — the order is being placed automatically." : "\nBalance top-up."
+      }`,
+      href: "/admin/funds",
     });
 
     // Storefront checkout: the payment was for a specific order — place it now.

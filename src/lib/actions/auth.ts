@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { pushAdminNotification } from "@/lib/admin-notify";
 import { redirect } from "next/navigation";
 import * as mail from "@/lib/mail";
 import { auth } from "@/lib/auth";
@@ -40,6 +41,12 @@ export async function registerAction(
     data: { name, email, passwordHash, role: "CUSTOMER", balance: 0, termsAcceptedAt: new Date() },
   });
 
+  await pushAdminNotification({
+    type: "USER",
+    title: `New registration — ${email}`,
+    body: `${name} created an account (email verification pending).`,
+    href: "/admin/users",
+  });
   await sendVerificationEmail(user);
 
   redirect("/login?registered=1");
