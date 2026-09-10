@@ -3,6 +3,7 @@
 import { useMemo, useState, useActionState, useTransition } from "react";
 import { importProviderServicesAction, saveMarkupAction } from "@/lib/actions/provider";
 import type { ProviderService } from "@/lib/providers/morethanpanel";
+import { PLATFORMS, platformOf, type PlatformKey } from "@/lib/catalog";
 
 const PAGE_SIZE = 50;
 
@@ -17,6 +18,30 @@ export default function ImportServicesForm({
 }) {
   const imported = useMemo(() => new Set(importedIds), [importedIds]);
   const [showImported, setShowImported] = useState(false);
+  const [platform, setPlatform] = useState<PlatformKey | "all">("all");
+  const [category, setCategory] = useState("all");
+
+  // Platform of each provider service, from its category + name keywords.
+  const platformById = useMemo(() => {
+    const m = new Map<string, PlatformKey>();
+    for (const s of services) m.set(String(s.service), platformOf(`${s.category} ${s.name}`));
+    return m;
+  }, [services]);
+  const platformCounts = useMemo(() => {
+    const counts = new Map<PlatformKey, number>();
+    for (const s of services) {
+      const p = platformById.get(String(s.service)) ?? "other";
+      counts.set(p, (counts.get(p) ?? 0) + 1);
+    }
+    return counts;
+  }, [services, platformById]);
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of services) {
+      if (platform === "all" || platformById.get(String(s.service)) === platform) set.add(s.category);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [services, platform, platformById]);
   const [state, formAction, pending] = useActionState(importProviderServicesAction, undefined);
   const [query, setQuery] = useState("");
   // Prefilled with the saved markup; only changes when the admin edits it.
@@ -45,7 +70,10 @@ export default function ImportServicesForm({
     const q = query.trim().toLowerCase();
     // Services already in the catalog leave the import list; the toggle brings
     // them back (re-importing one refreshes its provider rate and price).
-    const pool = showImported ? services : services.filter((s) => !imported.has(String(s.service)));
+    const pool = services
+      .filter((s) => showImported || !imported.has(String(s.service)))
+      .filter((s) => platform === "all" || platformById.get(String(s.service)) === platform)
+      .filter((s) => category === "all" || s.category === category);
     const matches = q
       ? pool.filter(
           (s) => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
@@ -57,7 +85,7 @@ export default function ImportServicesForm({
     return [...matches].sort(
       (a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
     );
-  }, [services, query, showImported, imported]);
+  }, [services, query, showImported, imported, platform, category, platformById]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -73,7 +101,55 @@ export default function ImportServicesForm({
         <p className="rounded-lg bg-green-500/15 px-4 py-2 text-sm text-green-400">{state.success}</p>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setPlatform("all");
+            setCategory("all");
+            setPage(0);
+          }}
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            platform === "all" ? "bg-brand text-white" : "bg-white/5 text-slate-300 hover:bg-white/10"
+          }`}
+        >
+          All platforms
+        </button>
+        {PLATFORMS.filter((p) => platformCounts.get(p.key)).map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            onClick={() => {
+              setPlatform(p.key);
+              setCategory("all");
+              setPage(0);
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              platform === p.key ? "bg-brand text-white" : "bg-white/5 text-slate-300 hover:bg-white/10"
+            }`}
+          >
+            {p.icon} {p.label}
+            <span className="ml-1 opacity-70">{platformCounts.get(p.key)}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-wrap items-center gap-4">
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(0);
+          }}
+          className="max-w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none sm:max-w-md"
+        >
+          <option value="all">All categories ({categoryOptions.length})</option>
+          {categoryOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
         <input
           value={query}
           onChange={(e) => {
