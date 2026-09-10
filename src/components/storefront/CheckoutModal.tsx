@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { startCheckoutAction } from "@/lib/actions/checkout";
 import { normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
 import QualityPicker from "./QualityPicker";
-import { PLATFORMS, type PlatformKey } from "@/lib/catalog";
+import { PLATFORMS, TIERS, type PlatformKey } from "@/lib/catalog";
 
 export type Viewer = { signedIn: boolean; email: string | null; balance: number };
 
@@ -298,7 +298,12 @@ function Wizard({
                         </div>
                         <ul className="space-y-1 px-3 py-3 text-xs text-slate-300">
                           <li className="flex justify-between"><span>Quantity</span><em>{confirmedQty.toLocaleString("en-US")}</em></li>
-                          <li className="flex justify-between"><span>Quality</span><em>High</em></li>
+                          <li className="flex justify-between">
+                            <span>Quality</span>
+                            <em className={`not-italic rounded-full px-2 py-0.5 text-[11px] font-semibold ${TIERS[service.tier].className}`}>
+                              {TIERS[service.tier].dot ? `${TIERS[service.tier].dot} ${TIERS[service.tier].label}` : TIERS[service.tier].label}
+                            </em>
+                          </li>
                           <li className="flex justify-between"><span>Support</span><em>24/7</em></li>
                           <li className="flex justify-between"><span>Password required</span><em>No</em></li>
                         </ul>
