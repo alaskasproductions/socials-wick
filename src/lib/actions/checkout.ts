@@ -10,6 +10,7 @@ import * as viva from "@/lib/providers/viva";
 import { OrderError, orderCharge, placeOrder } from "@/lib/orders";
 import { displayName } from "@/lib/catalog";
 import { MIN_ORDER_EUR } from "@/lib/packages";
+import { linkRuleFor } from "@/lib/link-rules";
 
 export type CheckoutInput = {
   serviceId: string;
@@ -90,11 +91,16 @@ export async function startCheckoutAction(input: CheckoutInput): Promise<Checkou
       return { status: "error", error: "Enter a valid profile or post link." };
     }
 
-    const service = await prisma.service.findUnique({ where: { id: input.serviceId } });
+    const service = await prisma.service.findUnique({
+      where: { id: input.serviceId },
+      include: { category: { select: { name: true } } },
+    });
     if (!service || !service.active) return { status: "error", error: "Service not found." };
     if (quantity < service.min || quantity > service.max) {
       return { status: "error", error: `Quantity must be between ${service.min} and ${service.max}.` };
     }
+    const linkProblem = linkRuleFor(service.name, service.category.name).check(link);
+    if (linkProblem) return { status: "error", error: linkProblem };
 
     const origin = await getOrigin();
     const session = await auth();

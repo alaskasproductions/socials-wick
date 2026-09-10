@@ -3,6 +3,7 @@
 import { useMemo, useState, useActionState } from "react";
 import { placeOrderAction } from "@/lib/actions/customer";
 import { TIERS, categoryTier, displayName, serviceTier } from "@/lib/catalog";
+import { linkRuleFor } from "@/lib/link-rules";
 import type { CatalogCategory } from "./NewOrderWorkspace";
 
 const inputClass =
@@ -21,6 +22,8 @@ export default function NewOrderForm({
 }) {
   const [state, formAction, pending] = useActionState(placeOrderAction, undefined);
   const [quantity, setQuantity] = useState(0);
+  const [link, setLink] = useState("");
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const category = categories.find((c) => c.id === categoryId);
   const services = useMemo(() => category?.services ?? [], [category]);
@@ -30,9 +33,20 @@ export default function NewOrderForm({
     ? TIERS[categoryTier(category.name, category.services.map((s) => s.name))]
     : null;
   const selectedTier = service && category ? TIERS[serviceTier(service.name, category.name)] : null;
+  const linkRule = service && category ? linkRuleFor(service.name, category.name) : null;
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        const problem = linkRule ? linkRule.check(link.trim()) : null;
+        if (problem) {
+          e.preventDefault();
+          setLinkError(problem);
+        }
+      }}
+      className="space-y-4"
+    >
       {state?.error && (
         <p className="rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-400">{state.error}</p>
       )}
@@ -105,14 +119,38 @@ export default function NewOrderForm({
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-200">Link</label>
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-200">
+          Link
+          {linkRule && (
+            <span
+              title={linkRule.hint}
+              className="grid h-4 w-4 cursor-help place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-black"
+            >
+              i
+            </span>
+          )}
+        </label>
         <input
           name="link"
           type="url"
           required
-          placeholder="https://instagram.com/yourprofile"
+          value={link}
+          onChange={(e) => {
+            setLink(e.target.value);
+            setLinkError(null);
+          }}
+          placeholder={linkRule?.placeholder ?? "https://…"}
           className={inputClass}
         />
+        {linkRule && (
+          <p className={`mt-1 text-xs ${linkRule.level === "post" ? "text-amber-300" : "text-slate-400"}`}>
+            {linkRule.level === "post" ? "⚠️ " : ""}
+            {linkRule.hint}
+          </p>
+        )}
+        {linkError && (
+          <p className="mt-1 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-400">{linkError}</p>
+        )}
       </div>
 
       <div>

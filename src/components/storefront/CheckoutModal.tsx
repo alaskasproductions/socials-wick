@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { startCheckoutAction } from "@/lib/actions/checkout";
 import { MIN_ORDER_EUR, minQuantityFor, normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
 import QualityPicker from "./QualityPicker";
+import { linkRuleFor } from "@/lib/link-rules";
 import { PLATFORMS, TIERS, type PlatformKey } from "@/lib/catalog";
 
 export type Viewer = { signedIn: boolean; email: string | null; balance: number };
@@ -84,7 +85,9 @@ function Wizard({
   const service = type?.options.find((o) => o.id === serviceId) ?? type?.service;
   const platformMeta = PLATFORMS.find((p) => p.key === platform);
   const price = service && confirmedQty ? priceFor(service.rate, confirmedQty) : 0;
-  const link = normalizeLink(platform, linkInput);
+  const linkRule = service ? linkRuleFor(service.name, service.categoryName) : null;
+  // Post-level services need the pasted URL as-is; profile-level ones accept a bare username.
+  const link = linkRule?.level === "post" ? linkInput.trim() : normalizeLink(platform, linkInput);
   const stepsToShow = viewer.signedIn ? STEPS.filter((s) => s.key !== "email") : STEPS;
   const currentKey = stepsToShow[step]?.key ?? "service";
 
@@ -115,9 +118,12 @@ function Wizard({
         if (!confirmedQty) return;
       }
     }
-    if (currentKey === "link" && !/^https?:\/\/\S+$/i.test(link)) {
-      setError("Enter your username or the full link to your profile / post.");
-      return;
+    if (currentKey === "link") {
+      const problem = linkRule ? linkRule.check(link) : null;
+      if (problem) {
+        setError(problem);
+        return;
+      }
     }
     if (currentKey === "email") {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -338,22 +344,29 @@ function Wizard({
               {currentKey === "link" && (
                 <>
                   <p className="rounded-lg bg-brand/15 px-4 py-2.5 text-sm text-slate-200">
-                    ℹ️ Your profile or post must be public for the duration of the service.
+                    ℹ️ {linkRule?.hint}
                   </p>
                   <div>
                     <label className="text-sm font-medium text-slate-200">
-                      {platformMeta?.label} username or link
+                      {platformMeta?.label} {linkRule?.level === "post" ? linkRule.target : "username or profile link"}
                     </label>
                     <input
                       value={linkInput}
-                      onChange={(e) => setLinkInput(e.target.value)}
-                      placeholder={`@username or https://…`}
+                      onChange={(e) => {
+                        setLinkInput(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder={linkRule?.placeholder}
                       autoFocus
                       className={inputClass}
                     />
                     {link && (
                       <p className="mt-1 break-all text-xs text-slate-500">Will be delivered to: {link}</p>
                     )}
+                    <p className="mt-2 text-xs text-slate-500">
+                      Always read the service description for the allowed link format — a wrong link
+                      format is cancelled automatically and cannot be refunded once delivery starts.
+                    </p>
                   </div>
                 </>
               )}

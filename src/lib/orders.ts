@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import * as provider from "@/lib/providers/morethanpanel";
 import * as notify from "@/lib/notifications";
 import { displayName } from "@/lib/catalog";
+import { linkRuleFor } from "@/lib/link-rules";
 
 export class OrderError extends Error {}
 
@@ -25,11 +26,16 @@ export async function placeOrder(params: {
   const { userId, serviceId, quantity, link } = params;
   if (!serviceId || !link || !quantity) throw new OrderError("All fields are required.");
 
-  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+    include: { category: { select: { name: true } } },
+  });
   if (!service || !service.active) throw new OrderError("Service not found.");
   if (quantity < service.min || quantity > service.max) {
     throw new OrderError(`Quantity must be between ${service.min} and ${service.max}.`);
   }
+  const linkProblem = linkRuleFor(service.name, service.category.name).check(link);
+  if (linkProblem) throw new OrderError(linkProblem);
 
   const charge = orderCharge(service.rate, quantity);
   const user = await prisma.user.findUnique({ where: { id: userId } });
