@@ -8,6 +8,7 @@ const TABS = [
   { href: "/admin/settings/payments", label: "Payment Gateways", icon: "💳" },
   { href: "/admin/settings/seo", label: "SEO", icon: "🔍" },
   { href: "/admin/settings/livechat", label: "Live Chat", icon: "💬" },
+  { href: "/admin/settings/security", label: "Security", icon: "🛡️" },
   { href: "/admin/settings/account", label: "Account", icon: "🔐" },
 ];
 

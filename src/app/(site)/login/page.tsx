@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PREAUTH_COOKIE, PREAUTH_TTL_SECONDS, signPreauth } from "@/lib/totp";
+import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile";
+import Turnstile from "@/components/Turnstile";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -19,9 +21,13 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; registered?: string; reset?: string }>;
 }) {
   const params = await searchParams;
+  const turnstile = await getTurnstileConfig();
 
   async function login(formData: FormData) {
     "use server";
+    const captcha = await verifyTurnstile(formData);
+    if (!captcha.ok) redirect("/login?error=captcha");
+
     const email = String(formData.get("email") ?? "")
       .trim()
       .toLowerCase();
@@ -86,7 +92,9 @@ export default async function LoginPage({
       )}
       {params.error && (
         <p className="mt-4 rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-400">
-          Invalid email or password.
+          {params.error === "captcha"
+            ? "Please complete the security check and try again."
+            : "Invalid email or password."}
         </p>
       )}
 
@@ -114,6 +122,7 @@ export default async function LoginPage({
             className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 text-foreground placeholder:text-slate-400 px-3 py-2 text-sm focus:border-brand focus:outline-none"
           />
         </div>
+        {turnstile.enabled && <Turnstile siteKey={turnstile.siteKey} />}
         <button
           type="submit"
           className="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"

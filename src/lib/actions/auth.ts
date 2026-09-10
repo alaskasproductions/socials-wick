@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { pushAdminNotification } from "@/lib/admin-notify";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { redirect } from "next/navigation";
 import * as mail from "@/lib/mail";
 import { auth } from "@/lib/auth";
@@ -27,6 +28,8 @@ export async function registerAction(
   if (password.length < 6) {
     return { error: "Password must be at least 6 characters." };
   }
+  const captcha = await verifyTurnstile(formData);
+  if (!captcha.ok) return { error: captcha.error };
   if (formData.get("acceptTerms") !== "on") {
     return { error: "You must accept the Terms & Conditions, Privacy Policy and Refund Policy to create an account." };
   }
@@ -73,6 +76,8 @@ export async function requestPasswordResetAction(
     .trim()
     .toLowerCase();
   if (!email) return { error: "Enter your email address." };
+  const captcha = await verifyTurnstile(formData);
+  if (!captcha.ok) return { error: captcha.error };
 
   // Always return the same message whether or not the account exists, so
   // this form can't be used to enumerate registered emails.

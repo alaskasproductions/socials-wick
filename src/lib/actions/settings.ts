@@ -153,6 +153,31 @@ export async function saveMtpSettingsAction(
   return { success: "MoreThanPanel settings saved." };
 }
 
+export async function saveSecuritySettingsAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const siteKey = String(formData.get("turnstileSiteKey") ?? "").trim();
+  const secretInput = String(formData.get("turnstileSecretKey") ?? "").trim();
+
+  if (siteKey && !/^0x[A-Za-z0-9_-]{10,}$/.test(siteKey)) {
+    return { error: "That doesn't look like a Turnstile site key (they start with 0x…)." };
+  }
+
+  const values: Record<string, string> = { "security.turnstileSiteKey": siteKey };
+  if (secretInput.toLowerCase() === "clear") values["security.turnstileSecretKey"] = "";
+  else if (secretInput) values["security.turnstileSecretKey"] = secretInput;
+
+  await setSettings(values);
+  revalidatePath("/admin/settings");
+  revalidatePath("/login");
+  revalidatePath("/register");
+  revalidatePath("/forgot-password");
+  return { success: "Security settings saved." };
+}
+
 export async function saveSeoSettingsAction(
   _prevState: ActionState,
   formData: FormData
