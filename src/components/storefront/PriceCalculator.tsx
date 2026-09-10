@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { priceFor, type PlatformSection, type StoreService } from "@/lib/packages";
+import { minQuantityFor, priceFor, type PlatformSection, type StoreService } from "@/lib/packages";
 import QualityPicker from "./QualityPicker";
 import type { PlatformKey } from "@/lib/catalog";
 import type { CheckoutRequest } from "./CheckoutModal";
@@ -106,13 +106,12 @@ function QuantityPicker({
   service: StoreService;
   onPurchase: (quantity: number) => void;
 }) {
-  const [quantity, setQuantity] = useState(
-    service.min >= 1000 ? service.min : Math.min(service.max, 1000)
-  );
-  const step = service.min >= 1000 ? 1000 : Math.max(10, Math.min(100, service.min));
-  const sliderMax = Math.min(service.max, Math.max(service.min * 100, 100000));
+  const floor = minQuantityFor(service);
+  const [quantity, setQuantity] = useState(Math.max(floor, Math.min(service.max, 1000)));
+  const step = floor >= 1000 ? 1000 : Math.max(10, Math.min(100, floor));
+  const sliderMax = Math.min(service.max, Math.max(floor * 100, 100000));
   const price = priceFor(service.rate, quantity);
-  const percent = sliderMax > service.min ? ((quantity - service.min) / (sliderMax - service.min)) * 100 : 0;
+  const percent = sliderMax > floor ? ((quantity - floor) / (sliderMax - floor)) * 100 : 0;
 
   return (
     <>
@@ -128,7 +127,7 @@ function QuantityPicker({
         </div>
         <input
           type="range"
-          min={service.min}
+          min={floor}
           max={sliderMax}
           step={step}
           value={quantity}
@@ -137,7 +136,7 @@ function QuantityPicker({
           aria-label="Quantity"
         />
         <div className="mt-1 flex justify-between text-xs text-slate-500">
-          <span>{service.min.toLocaleString("en-US")}</span>
+          <span>{floor.toLocaleString("en-US")}</span>
           <span>{sliderMax.toLocaleString("en-US")}</span>
         </div>
       </div>

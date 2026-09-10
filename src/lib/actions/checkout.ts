@@ -9,6 +9,7 @@ import * as mail from "@/lib/mail";
 import * as viva from "@/lib/providers/viva";
 import { OrderError, orderCharge, placeOrder } from "@/lib/orders";
 import { displayName } from "@/lib/catalog";
+import { MIN_ORDER_EUR } from "@/lib/packages";
 
 export type CheckoutInput = {
   serviceId: string;
@@ -114,6 +115,9 @@ export async function startCheckoutAction(input: CheckoutInput): Promise<Checkou
     }
 
     const charge = orderCharge(service.rate, quantity);
+    if (charge < MIN_ORDER_EUR) {
+      return { status: "error", error: `The minimum order is €${MIN_ORDER_EUR.toFixed(2)}.` };
+    }
 
     if (user.balance >= charge) {
       const placed = await placeOrder({ userId: user.id, serviceId: service.id, quantity, link });

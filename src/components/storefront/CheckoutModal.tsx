@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { startCheckoutAction } from "@/lib/actions/checkout";
-import { normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
+import { MIN_ORDER_EUR, minQuantityFor, normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
 import QualityPicker from "./QualityPicker";
 import { PLATFORMS, TIERS, type PlatformKey } from "@/lib/catalog";
 
@@ -93,8 +93,13 @@ function Wizard({
   function confirmQuantity() {
     if (!service) return;
     const q = Math.floor(quantity);
-    if (!Number.isFinite(q) || q < service.min || q > service.max) {
-      setError(`Quantity must be between ${service.min.toLocaleString("en-US")} and ${service.max.toLocaleString("en-US")}.`);
+    const floor = minQuantityFor(service);
+    if (!Number.isFinite(q) || q < floor || q > service.max) {
+      setError(
+        q < floor && q >= service.min
+          ? `The minimum order is €${MIN_ORDER_EUR.toFixed(2)} — that's ${floor.toLocaleString("en-US")} for this service.`
+          : `Quantity must be between ${floor.toLocaleString("en-US")} and ${service.max.toLocaleString("en-US")}.`
+      );
       setConfirmedQty(null);
       return;
     }
@@ -270,7 +275,7 @@ function Wizard({
                         </button>
                       </div>
                       <p className="mt-1 text-xs text-slate-500">
-                        Min {service.min.toLocaleString("en-US")} · Max {service.max.toLocaleString("en-US")}
+                        Min {minQuantityFor(service).toLocaleString("en-US")} · Max {service.max.toLocaleString("en-US")}
                       </p>
                     </div>
                   </div>

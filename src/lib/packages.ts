@@ -53,6 +53,17 @@ export type PlatformSection = {
 /** Marketing "was" price shown struck through on package cards (10% above). */
 export const COMPARE_AT_MULTIPLIER = 1.1;
 
+/** Smallest order the storefront sells (card payments below this are pointless/refused). */
+export const MIN_ORDER_EUR = 1;
+
+/** Smallest quantity of a service that both respects its min and costs at least MIN_ORDER_EUR. */
+export function minQuantityFor(service: { rate: number; min: number; max: number }): number {
+  const byPrice = Math.ceil((MIN_ORDER_EUR / service.rate) * 1000);
+  const step = service.min >= 1000 ? 100 : 10;
+  const rounded = Math.ceil(byPrice / step) * step;
+  return Math.min(service.max, Math.max(service.min, rounded));
+}
+
 const TYPES: { key: string; label: string; icon: string; match: RegExp }[] = [
   { key: "followers", label: "Followers", icon: "👤", match: /follower/i },
   { key: "subscribers", label: "Subscribers", icon: "🔔", match: /subscriber/i },
@@ -79,11 +90,10 @@ export function priceFor(rate: number, quantity: number): number {
 }
 
 export function buildPackages(service: StoreService): Package[] {
-  let quantities = QUANTITY_LADDER.filter((q) => q >= service.min && q <= service.max);
+  const floor = minQuantityFor(service);
+  let quantities = QUANTITY_LADDER.filter((q) => q >= floor && q <= service.max);
   if (quantities.length < 2) {
-    quantities = [service.min, service.min * 5, service.min * 10, service.min * 50].filter(
-      (q) => q <= service.max
-    );
+    quantities = [floor, floor * 5, floor * 10, floor * 50].filter((q) => q <= service.max);
   }
   // Spread up to 4 cards across the available range.
   if (quantities.length > 4) {
