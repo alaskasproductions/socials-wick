@@ -5,9 +5,10 @@ import {
   PLATFORMS,
   SERVICE_KINDS,
   TIERS,
+  categoryTier,
   displayName,
   platformOf,
-  tierOf,
+  serviceTier,
   type PlatformKey,
   type ServiceKindKey,
   type Tier,
@@ -45,7 +46,10 @@ export default function ServiceBrowser({
     () =>
       categories.map((c) => ({
         ...c,
-        tier: tierOf(c.name),
+        tier: categoryTier(
+          c.name,
+          c.services.map((s) => s.name)
+        ),
         platform: platformOf(c.name),
         label: displayName(c.name),
       })),
@@ -62,10 +66,10 @@ export default function ServiceBrowser({
     const q = query.trim().toLowerCase();
     const kindMatcher = kind === "all" ? null : SERVICE_KINDS.find((k) => k.key === kind)?.match;
     return decorated
-      .filter((c) => tier === "all" || c.tier === tier)
       .filter((c) => platform === "all" || c.platform === platform)
       .map((c) => {
         const services = c.services.filter((s) => {
+          if (tier !== "all" && serviceTier(s.name, c.name) !== tier) return false;
           const hay = `${c.label} ${displayName(s.name)} ${s.description ?? ""}`;
           if (kindMatcher && !kindMatcher.test(hay)) return false;
           if (q && !hay.toLowerCase().includes(q)) return false;
@@ -224,10 +228,18 @@ export default function ServiceBrowser({
                     <tbody className="divide-y divide-white/5">
                       {c.services.map((s) => {
                         const active = s.id === selectedServiceId;
+                        const st = TIERS[serviceTier(s.name, c.name)];
                         return (
                           <tr key={s.id} className={active ? "bg-brand/10" : undefined}>
                             <td className="px-4 py-2.5 text-slate-200">
-                              <div>{displayName(s.name)}</div>
+                              <div className="flex items-start gap-2">
+                                {st.dot && (
+                                  <span title={`${st.label} — ${st.description}`} className="shrink-0">
+                                    {st.dot}
+                                  </span>
+                                )}
+                                <span>{displayName(s.name)}</span>
+                              </div>
                               {s.description && (
                                 <details className="mt-1">
                                   <summary className="cursor-pointer text-xs text-brand hover:underline">

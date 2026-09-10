@@ -9,10 +9,14 @@ const PAGE_SIZE = 50;
 export default function ImportServicesForm({
   services,
   defaultMarkup,
+  importedIds,
 }: {
   services: ProviderService[];
   defaultMarkup: number;
+  importedIds: string[];
 }) {
+  const imported = useMemo(() => new Set(importedIds), [importedIds]);
+  const [showImported, setShowImported] = useState(false);
   const [state, formAction, pending] = useActionState(importProviderServicesAction, undefined);
   const [query, setQuery] = useState("");
   // Prefilled with the saved markup; only changes when the admin edits it.
@@ -39,18 +43,21 @@ export default function ImportServicesForm({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    // Services already in the catalog leave the import list; the toggle brings
+    // them back (re-importing one refreshes its provider rate and price).
+    const pool = showImported ? services : services.filter((s) => !imported.has(String(s.service)));
     const matches = q
-      ? services.filter(
+      ? pool.filter(
           (s) => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
         )
-      : services;
+      : pool;
     // Unfiltered, the provider returns services in a fairly arbitrary order —
     // sort by category then name so browsing without a search term is
     // actually navigable instead of a random slice of 4000+ services.
     return [...matches].sort(
       (a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
     );
-  }, [services, query]);
+  }, [services, query, showImported, imported]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -114,11 +121,22 @@ export default function ImportServicesForm({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">
-          {filtered.length} service{filtered.length === 1 ? "" : "s"} match
-          {filtered.length === 1 ? "es" : ""}
-          {filtered.length > 0 && ` — page ${currentPage + 1} of ${pageCount}`}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-xs text-slate-500">
+            {filtered.length} service{filtered.length === 1 ? "" : "s"} match
+            {filtered.length === 1 ? "es" : ""}
+            {filtered.length > 0 && ` — page ${currentPage + 1} of ${pageCount}`}
+          </p>
+          <label className="flex items-center gap-1.5 text-xs text-slate-400">
+            <input
+              type="checkbox"
+              checked={showImported}
+              onChange={(e) => setShowImported(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Show already imported ({imported.size})
+          </label>
+        </div>
         {pageCount > 1 && (
           <div className="flex items-center gap-2">
             <button
@@ -159,6 +177,11 @@ export default function ImportServicesForm({
                 <tr key={s.service}>
                   <td className="px-4 py-2">
                     <input type="checkbox" name="service" value={s.service} />
+                    {imported.has(String(s.service)) && (
+                      <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                        Imported
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-2 text-foreground">{s.name}</td>
                   <td className="px-4 py-2 text-slate-400">{s.category}</td>

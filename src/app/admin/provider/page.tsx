@@ -7,8 +7,11 @@ import SyncButton from "./SyncButton";
 import MtpSettingsForm from "./MtpSettingsForm";
 
 export default async function AdminProviderPage() {
-  const [linkedCount, settings] = await Promise.all([
-    prisma.service.count({ where: { providerServiceId: { not: null } } }),
+  const [linked, settings] = await Promise.all([
+    prisma.service.findMany({
+      where: { providerServiceId: { not: null } },
+      select: { providerServiceId: true },
+    }),
     getSettings(["mtp.apiUrl", "mtp.apiKey", "mtp.markupPercent"]),
   ]);
 
@@ -68,7 +71,7 @@ export default async function AdminProviderPage() {
           </div>
           <div className="rounded-xl glass p-5">
             <div className="text-sm text-slate-400">Linked in Catalog</div>
-            <div className="mt-1 text-2xl font-bold text-foreground">{linkedCount}</div>
+            <div className="mt-1 text-2xl font-bold text-foreground">{linked.length}</div>
           </div>
         </div>
       )}
@@ -89,6 +92,7 @@ export default async function AdminProviderPage() {
             <ImportServicesForm
               services={services}
               defaultMarkup={Number(settings["mtp.markupPercent"]) || 30}
+              importedIds={linked.map((l) => l.providerServiceId as string)}
             />
           </div>
         </div>

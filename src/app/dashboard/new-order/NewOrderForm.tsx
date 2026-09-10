@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useActionState } from "react";
 import { placeOrderAction } from "@/lib/actions/customer";
-import { TIERS, displayName, tierOf } from "@/lib/catalog";
+import { TIERS, categoryTier, displayName, serviceTier } from "@/lib/catalog";
 import type { CatalogCategory } from "./NewOrderWorkspace";
 
 const inputClass =
@@ -26,7 +26,10 @@ export default function NewOrderForm({
   const services = useMemo(() => category?.services ?? [], [category]);
   const service = services.find((s) => s.id === serviceId);
   const charge = service ? ((quantity || 0) / 1000) * service.rate : 0;
-  const tier = category ? TIERS[tierOf(category.name)] : null;
+  const tier = category
+    ? TIERS[categoryTier(category.name, category.services.map((s) => s.name))]
+    : null;
+  const selectedTier = service && category ? TIERS[serviceTier(service.name, category.name)] : null;
 
   return (
     <form action={formAction} className="space-y-4">
@@ -73,13 +76,20 @@ export default function NewOrderForm({
         >
           {services.map((s) => (
             <option key={s.id} value={s.id} title={displayName(s.name)}>
-              €{s.rate.toFixed(2)} · {displayName(s.name)}
+              {TIERS[serviceTier(s.name, category?.name ?? "")].dot} €{s.rate.toFixed(2)} · {displayName(s.name)}
             </option>
           ))}
         </select>
         {service && (
           <div className="mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-            <p className="text-sm font-medium leading-snug text-slate-100">{displayName(service.name)}</p>
+            <p className="text-sm font-medium leading-snug text-slate-100">
+              {selectedTier?.dot && (
+                <span className={`mr-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${selectedTier.className}`}>
+                  {selectedTier.dot} {selectedTier.label}
+                </span>
+              )}
+              {displayName(service.name)}
+            </p>
             <p className="mt-1 text-xs text-slate-400">
               <span className="font-semibold text-brand">€{service.rate.toFixed(2)}</span> per 1000 · Min{" "}
               {service.min.toLocaleString("de-DE")} · Max {service.max.toLocaleString("de-DE")}

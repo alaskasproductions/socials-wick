@@ -39,6 +39,36 @@ export function tierOf(name: string): Tier {
   return "standard";
 }
 
+/**
+ * Tier of a service: its own emoji wins, otherwise the category's. Provider
+ * catalogs put the colour on the service name (e.g. "🔵 Bluesky Real Likes")
+ * and only sometimes on the category.
+ */
+export function serviceTier(serviceName: string, categoryName: string): Tier {
+  const own = tierOf(serviceName);
+  return own !== "standard" ? own : tierOf(categoryName);
+}
+
+/** Category tier: its own emoji, else the most common tier of its services. */
+export function categoryTier(categoryName: string, serviceNames: string[]): Tier {
+  const own = tierOf(categoryName);
+  if (own !== "standard") return own;
+  const counts = new Map<Tier, number>();
+  for (const n of serviceNames) {
+    const t = tierOf(n);
+    if (t !== "standard") counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+  let best: Tier = "standard";
+  let bestCount = 0;
+  for (const [t, c] of counts) {
+    if (c > bestCount) {
+      best = t;
+      bestCount = c;
+    }
+  }
+  return best;
+}
+
 /** Strips the tier emoji and rebrands provider names for display. */
 export function displayName(name: string): string {
   return name
