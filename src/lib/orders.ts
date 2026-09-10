@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import * as provider from "@/lib/providers/morethanpanel";
 import * as notify from "@/lib/notifications";
+import { displayName } from "@/lib/catalog";
 
 export class OrderError extends Error {}
 
@@ -80,7 +81,7 @@ export async function placeOrder(params: {
     notify.notifyCustomerOrderConfirmation({
       customerEmail: user.email,
       customerName: user.name,
-      serviceName: service.name,
+      serviceName: displayName(service.name),
       quantity,
       charge,
     }),

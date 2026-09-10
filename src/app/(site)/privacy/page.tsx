@@ -151,7 +151,7 @@ export default function PrivacyPage() {
             own privacy policies.
           </li>
           <li>
-            <strong>Fulfilment provider(s)</strong>, including MoreThanPanel, to the extent needed
+            <strong>Fulfilment partners</strong> that deliver the engagement, to the extent needed
             to deliver an ordered Service — typically limited to the target link/username and
             quantity, never your account or payment details.
           </li>

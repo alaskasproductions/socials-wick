@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { displayName } from "@/lib/catalog";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/15 text-amber-400",
@@ -92,7 +93,7 @@ export default async function DashboardOverviewPage() {
           <tbody className="divide-y divide-white/5">
             {orders.map((o) => (
               <tr key={o.id}>
-                <td className="px-5 py-3">{o.service.name}</td>
+                <td className="px-5 py-3">{displayName(o.service.name)}</td>
                 <td className="px-5 py-3">{o.quantity}</td>
                 <td className="px-5 py-3">€{o.charge.toFixed(2)}</td>
                 <td className="px-5 py-3">

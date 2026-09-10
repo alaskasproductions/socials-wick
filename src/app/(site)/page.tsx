@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Reveal from "@/components/Reveal";
 import Storefront from "@/components/storefront/Storefront";
+import QualityTiers from "@/components/QualityTiers";
+import { displayName } from "@/lib/catalog";
 import { buildStorefront } from "@/lib/packages";
 import { auth } from "@/lib/auth";
 
@@ -170,6 +172,9 @@ export default async function HomePage() {
         </section>
       </Reveal>
 
+      {/* Quality tiers explainer */}
+      <QualityTiers />
+
       {/* Storefront: per-platform packages + price calculator + checkout */}
       <Storefront sections={sections} viewer={viewer} />
 
@@ -193,7 +198,7 @@ export default async function HomePage() {
                   <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-white/5 text-2xl">
                     {iconFor(cat.slug)}
                   </div>
-                  <h3 className="mt-4 font-semibold text-foreground">{cat.name}</h3>
+                  <h3 className="mt-4 font-semibold text-foreground">{displayName(cat.name)}</h3>
                   <p className="mt-1 text-sm text-slate-400">
                     {cat.services.length > 0
                       ? `From €${Math.min(...cat.services.map((s) => s.rate)).toFixed(2)} / 1000`

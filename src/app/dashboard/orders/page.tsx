@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { displayName } from "@/lib/catalog";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/15 text-amber-400",
@@ -38,7 +39,7 @@ export default async function OrderHistoryPage() {
               <tr key={o.id}>
                 <td className="px-5 py-3 font-mono text-xs text-slate-400">{o.id.slice(0, 8)}</td>
                 <td className="px-5 py-3">
-                  {o.service.category.name} — {o.service.name}
+                  {displayName(o.service.category.name)} — {displayName(o.service.name)}
                 </td>
                 <td className="max-w-[200px] truncate px-5 py-3 text-slate-400">
                   <a href={o.link} target="_blank" rel="noreferrer" className="hover:text-brand">
