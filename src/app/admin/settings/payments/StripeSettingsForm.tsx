@@ -17,7 +17,7 @@ export default function StripeSettingsForm({
   const [state, formAction, pending] = useActionState(saveStripeSettingsAction, undefined);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-4" autoComplete="off">
       {state?.error && (
         <p className="rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-400">{state.error}</p>
       )}
@@ -33,6 +33,7 @@ export default function StripeSettingsForm({
       <div>
         <label className="text-sm font-medium text-slate-200">Publishable Key</label>
         <input
+          autoComplete="off"
           name="publishableKey"
           defaultValue={publishableKey}
           placeholder="pk_test_… or pk_live_…"
@@ -45,6 +46,7 @@ export default function StripeSettingsForm({
           Secret Key {hasSecretKey && <span className="text-xs text-green-400">(saved)</span>}
         </label>
         <input
+          autoComplete="new-password"
           name="secretKey"
           type="password"
           placeholder={hasSecretKey ? "•••••••••••••••• — leave blank to keep" : "sk_test_… or sk_live_…"}
@@ -57,6 +59,7 @@ export default function StripeSettingsForm({
           Webhook Signing Secret {hasWebhookSecret && <span className="text-xs text-green-400">(saved)</span>}
         </label>
         <input
+          autoComplete="new-password"
           name="webhookSecret"
           type="password"
           placeholder={hasWebhookSecret ? "•••••••••••••••• — leave blank to keep" : "whsec_…"}

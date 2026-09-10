@@ -21,7 +21,7 @@ export default function VivaSettingsForm({
   const [state, formAction, pending] = useActionState(saveVivaSettingsAction, undefined);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-4" autoComplete="off">
       {state?.error && (
         <p className="rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-400">{state.error}</p>
       )}
@@ -49,6 +49,7 @@ export default function VivaSettingsForm({
         <div>
           <label className="text-sm font-medium text-slate-200">Source Code</label>
           <input
+          autoComplete="off"
             name="sourceCode"
             defaultValue={sourceCode}
             placeholder="4-digit payment source code"
@@ -62,6 +63,7 @@ export default function VivaSettingsForm({
           Client ID {hasClientId && <span className="text-xs text-green-400">(saved)</span>}
         </label>
         <input
+          autoComplete="off"
           name="clientId"
           placeholder={hasClientId ? "•••••••••••••••• — leave blank to keep" : "Smart Checkout Client ID"}
           className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-slate-500 focus:border-brand focus:outline-none"
@@ -73,6 +75,7 @@ export default function VivaSettingsForm({
           Client Secret {hasClientSecret && <span className="text-xs text-green-400">(saved)</span>}
         </label>
         <input
+          autoComplete="new-password"
           name="clientSecret"
           type="password"
           placeholder={hasClientSecret ? "•••••••••••••••• — leave blank to keep" : "Smart Checkout Client Secret"}
@@ -85,6 +88,7 @@ export default function VivaSettingsForm({
           Webhook Verification Key {hasWebhookKey && <span className="text-xs text-green-400">(saved)</span>}
         </label>
         <input
+          autoComplete="new-password"
           name="webhookVerificationKey"
           type="password"
           placeholder={hasWebhookKey ? "•••••••••••••••• — leave blank to keep" : "From Viva's 'Retrieve webhook key' API"}
