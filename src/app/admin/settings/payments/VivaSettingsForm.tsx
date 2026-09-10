@@ -31,7 +31,7 @@ export default function VivaSettingsForm({
 
       <label className="flex items-center gap-2 text-sm font-medium text-slate-200">
         <input type="checkbox" name="enabled" defaultChecked={enabled} className="h-4 w-4" />
-        Enabled — show "Pay with Card via Viva Wallet" on the Add Funds page
+        Enabled — show &quot;Pay with Card via Viva Wallet&quot; on the Add Funds page
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">

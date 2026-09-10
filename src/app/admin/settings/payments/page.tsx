@@ -20,7 +20,7 @@ export default async function AdminSettingsPage() {
     <div className="space-y-8">
       <p className="text-sm text-slate-400">
         Configure the payment gateways customers can use to add funds. Credentials are stored in
-        the database — fill them in whenever you're ready, and toggle a gateway on to make it
+        the database — fill them in whenever you&apos;re ready, and toggle a gateway on to make it
         available on the Add Funds page.
       </p>
 
