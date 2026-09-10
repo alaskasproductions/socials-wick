@@ -77,7 +77,16 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-foreground">Support</h4>
             <p className="mt-3 text-sm text-slate-400">24/7 support for all your campaigns.</p>
-            <p className="mt-1 text-sm text-slate-400">support@socialswick.com</p>
+            <p className="mt-1 text-sm text-slate-400">
+              <a href="mailto:support@socialswick.com" className="hover:text-brand">
+                support@socialswick.com
+              </a>
+            </p>
+            <p className="mt-2 text-sm">
+              <Link href="/contact" className="font-medium text-brand hover:underline">
+                Contact &amp; Support &rarr;
+              </Link>
+            </p>
           </div>
         </div>
 
@@ -92,6 +101,9 @@ export default function Footer() {
             </Link>
             <Link href="/refund-policy" className="hover:text-brand">
               Refunds
+            </Link>
+            <Link href="/contact" className="hover:text-brand">
+              Contact
             </Link>
           </span>
         </div>

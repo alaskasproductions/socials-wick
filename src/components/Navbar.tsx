@@ -25,8 +25,8 @@ export default async function Navbar() {
           <Link href="/#faq" className="hover:text-brand">
             FAQ
           </Link>
-          <Link href="/terms" className="hover:text-brand">
-            Terms
+          <Link href="/contact" className="hover:text-brand">
+            Contact
           </Link>
         </nav>
 
