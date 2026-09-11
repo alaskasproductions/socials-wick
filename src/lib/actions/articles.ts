@@ -55,8 +55,9 @@ export async function saveArticleAction(_prev: ArticleFormState, formData: FormD
     return { error: "Canonical URL must be a full URL starting with https://." };
   }
   const coverImage = str(formData, "coverImage", 500) || null;
-  if (coverImage && !/^(\/media\/|https?:\/\/)/i.test(coverImage)) {
-    return { error: "Cover image must be an uploaded image or a full https:// URL." };
+  // Uploaded (/media/...), bundled (/images/...) or an absolute https:// image.
+  if (coverImage && !/^(\/(?!\/)|https?:\/\/)/i.test(coverImage)) {
+    return { error: "Cover image must be an uploaded image, a site path or a full https:// URL." };
   }
 
   const existing = id ? await prisma.article.findUnique({ where: { id } }) : null;

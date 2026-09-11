@@ -254,7 +254,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
 
           {toc.length >= 3 && (
             <aside className="hidden lg:block">
-              <div className="sticky top-24 glass rounded-xl p-5">
+              <div className="sticky top-24 glass max-h-[calc(100vh-8rem)] overflow-y-auto rounded-xl p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">In this article</p>
                 <TocList toc={toc} />
               </div>
