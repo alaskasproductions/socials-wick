@@ -54,3 +54,7 @@ skills-lock.json
 
 # admin uploads (served by /media, see src/lib/uploads.ts)
 /storage/
+
+# server-side DB backups and Passenger restart dir
+prisma/dev.db.bak-*
+/tmp/

@@ -188,8 +188,12 @@ it work there:
   run the full sequence instead (each step is safe to repeat):
 
   ```bash
-  runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin     bash -c 'cd /home/socialswick/repositories/socials-wick && cp prisma/dev.db prisma/dev.db.bak-$(date +%Y%m%d-%H%M) && git pull && npm install --no-audit --no-fund && npx prisma migrate deploy && npx prisma generate && npx next build --webpack && touch tmp/restart.txt'
+  runuser -u socialswick -- env HOME=/home/socialswick PATH=/opt/cpanel/ea-nodejs20/bin:/usr/bin:/bin     bash -c 'cd /home/socialswick/repositories/socials-wick && cp prisma/dev.db prisma/dev.db.bak-$(date +%Y%m%d-%H%M) && git checkout -- package-lock.json && git pull && npm install --no-audit --no-fund && git checkout -- package-lock.json && npx prisma migrate deploy && npx prisma generate && npx next build --webpack && touch tmp/restart.txt'
   ```
+- `npm install` on the server rewrites `package-lock.json` (Linux vs Windows
+  resolution), and the next `git pull` then aborts with "Your local changes
+  would be overwritten". The recipe resets the lockfile before pulling and
+  after installing; the committed lockfile is the source of truth.
 - Never pipe `next build` into `head` (or anything that stops reading early).
   When `head` exits, the build gets SIGPIPE and dies silently *after* printing
   "Compiled successfully" but *before* writing `.next/BUILD_ID`; Passenger then
