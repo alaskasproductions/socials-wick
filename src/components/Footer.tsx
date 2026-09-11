@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { hasLiveArticles } from "@/lib/articles";
 
-export default function Footer() {
+export default async function Footer() {
+  const blog = await hasLiveArticles();
   return (
     <footer className="mt-auto border-t border-white/10 bg-black/30 backdrop-blur-xl">
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -33,6 +35,13 @@ export default function Footer() {
                   Services
                 </Link>
               </li>
+              {blog && (
+                <li>
+                  <Link href="/blog" className="hover:text-brand">
+                    Blog
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href="/terms" className="hover:text-brand">
                   Terms & Conditions

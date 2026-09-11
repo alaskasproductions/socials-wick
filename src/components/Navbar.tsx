@@ -2,8 +2,9 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import Logo from "@/components/Logo";
 import MobileMenu from "@/components/MobileMenu";
+import { hasLiveArticles } from "@/lib/articles";
 
-const LINKS = [
+const BASE_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/#how-it-works", label: "How It Works" },
@@ -12,7 +13,8 @@ const LINKS = [
 ];
 
 export default async function Navbar() {
-  const session = await auth();
+  const [session, blog] = await Promise.all([auth(), hasLiveArticles()]);
+  const LINKS = blog ? [...BASE_LINKS.slice(0, 4), { href: "/blog", label: "Blog" }, ...BASE_LINKS.slice(4)] : BASE_LINKS;
   const panelHref = session?.user?.role === "ADMIN" ? "/admin" : "/dashboard";
   const panelLabel = session?.user?.role === "ADMIN" ? "Admin Panel" : "Dashboard";
 

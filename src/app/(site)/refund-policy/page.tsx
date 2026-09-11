@@ -2,7 +2,8 @@ import Link from "next/link";
 import { COMPANY } from "@/lib/company";
 
 export const metadata = {
-  title: "Refund Policy — Socials Wick",
+  title: "Refund Policy",
+  alternates: { canonical: "/refund-policy" },
 };
 
 const TOC = [

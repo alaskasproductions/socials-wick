@@ -12,6 +12,7 @@ export default async function StructuredData() {
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${config.siteUrl}/#organization`,
     name: config.businessName,
     url: config.siteUrl,
     logo: `${config.siteUrl}/brand/logo-mark-512.png`,

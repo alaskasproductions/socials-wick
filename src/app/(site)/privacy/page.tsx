@@ -2,7 +2,8 @@ import Link from "next/link";
 import { COMPANY } from "@/lib/company";
 
 export const metadata = {
-  title: "Privacy Policy — Socials Wick",
+  title: "Privacy Policy",
+  alternates: { canonical: "/privacy" },
 };
 
 const TOC = [

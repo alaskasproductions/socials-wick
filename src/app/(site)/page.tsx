@@ -8,6 +8,10 @@ import { displayName } from "@/lib/catalog";
 import { buildStorefront } from "@/lib/packages";
 import { auth } from "@/lib/auth";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 const CATEGORY_ICONS: Record<string, string> = {
   instagram: "📸",
   youtube: "▶️",

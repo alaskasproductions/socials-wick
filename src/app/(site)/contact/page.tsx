@@ -4,7 +4,8 @@ import { getTurnstileConfig } from "@/lib/turnstile";
 import ContactForm from "./ContactForm";
 
 export const metadata = {
-  title: "Contact & Support — Socials Wick",
+  title: "Contact & Support",
+  alternates: { canonical: "/contact" },
   description:
     "Get in touch with Socials Wick customer support. Email us, use the contact form, or chat with us — we reply within 24 hours.",
 };

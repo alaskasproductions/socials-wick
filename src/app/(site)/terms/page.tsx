@@ -17,7 +17,8 @@ const TOC = [
 ] as const;
 
 export const metadata = {
-  title: "Terms & Conditions — Socials Wick",
+  title: "Terms & Conditions",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

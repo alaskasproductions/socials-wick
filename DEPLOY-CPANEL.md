@@ -228,3 +228,12 @@ application (usually `stderr.log` in the application root).
 purpose so **Update from Remote** never overwrites real production data.
 If you ever delete and re-clone the repository path instead of pulling in
 place, the database file goes with it — copy it out first.
+
+## Uploaded media (blog images)
+
+Images uploaded in Admin → Articles are written to `storage/uploads/` inside
+the app directory (override with the `UPLOAD_DIR` env var) and served by the
+`/media/...` route. The folder is gitignored, so `git pull` never touches it,
+but it is NOT in the repo: include it in backups together with
+`prisma/dev.db`. Do not move uploads into `public/` — a Next.js production
+server only serves `public/` files that existed at build time.

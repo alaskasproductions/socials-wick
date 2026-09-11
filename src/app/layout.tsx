@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(seo.siteUrl),
     title: {
       default: SITE_TITLE,
-      template: "%s — Socials Wick",
+      template: "%s — SocialsWick",
     },
     description: SITE_DESCRIPTION,
     keywords: [
@@ -47,15 +47,12 @@ export async function generateMetadata(): Promise<Metadata> {
       "Telegram members",
       "social media marketing panel",
     ],
-    alternates: {
-      canonical: "/",
-    },
     openGraph: {
       title: SITE_TITLE,
       description: SITE_DESCRIPTION,
       url: seo.siteUrl,
-      siteName: "Socials Wick",
-      images: ["/images/hero-bg.png"],
+      siteName: "SocialsWick",
+      images: [{ url: "/brand/og-default.png", width: 1200, height: 630, alt: "SocialsWick" }],
       locale: "en_CY",
       type: "website",
     },
@@ -63,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: SITE_TITLE,
       description: SITE_DESCRIPTION,
-      images: ["/images/hero-bg.png"],
+      images: ["/brand/og-default.png"],
     },
     ...(seo.googleSiteVerification && {
       verification: { google: seo.googleSiteVerification },
