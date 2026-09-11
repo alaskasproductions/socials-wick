@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 flex-col border-r border-white/10 bg-black/30 backdrop-blur-xl md:flex">
-        <Link href="/" aria-label="SocialsWick home" className="block border-b border-white/10 px-6 py-5 text-foreground">
+        <Link href="/" aria-label="SocialsWick home" className="flex items-center border-b border-white/10 px-6 py-5 text-foreground">
           <Logo size="sm" />
         </Link>
         <nav className="flex-1 space-y-1 px-3 py-4">

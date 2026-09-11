@@ -37,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 flex-col border-r border-white/10 bg-black/50 backdrop-blur-xl text-white md:flex">
-        <Link href="/" aria-label="SocialsWick home" className="block border-b border-white/10 px-6 py-5 text-white">
+        <Link href="/" aria-label="SocialsWick home" className="flex items-center border-b border-white/10 px-6 py-5 text-white">
           <Logo size="sm" />
         </Link>
         <div className="px-6 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">

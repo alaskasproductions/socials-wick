@@ -24,7 +24,7 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-background/80 backdrop-blur-xl [--header-h:64px] md:[--header-h:72px]">
       <div className="mx-auto flex h-[var(--header-h)] max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" aria-label="SocialsWick home" className="shrink-0 text-foreground">
+        <Link href="/" aria-label="SocialsWick home" className="flex shrink-0 items-center text-foreground">
           <Logo />
         </Link>
 
