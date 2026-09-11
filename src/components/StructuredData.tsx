@@ -14,7 +14,7 @@ export default async function StructuredData() {
     "@type": "Organization",
     name: config.businessName,
     url: config.siteUrl,
-    logo: `${config.siteUrl}/favicon.ico`,
+    logo: `${config.siteUrl}/brand/logo-mark-512.png`,
     description:
       "Socials Wick is an SMM panel offering Instagram, YouTube, TikTok and Telegram growth services with instant delivery.",
     areaServed: ["CY", "Worldwide"],

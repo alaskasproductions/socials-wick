@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function Footer() {
   return (
@@ -6,11 +7,8 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand text-white text-sm">
-                S
-              </span>
-              Socials <span className="text-brand">Wick</span>
+            <div className="text-foreground">
+              <Logo />
             </div>
             <p className="mt-3 text-sm text-slate-400">
               The fast, affordable SMM panel for creators, agencies and resellers worldwide.
@@ -91,7 +89,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/10 pt-6 text-center text-xs text-slate-500 sm:flex-row sm:justify-between">
-          <span>© {new Date().getFullYear()} Socials Wick. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} SocialsWick. All rights reserved.</span>
           <span className="flex gap-4">
             <Link href="/terms" className="hover:text-brand">
               Terms

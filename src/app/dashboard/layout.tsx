@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -19,11 +20,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 flex-col border-r border-white/10 bg-black/30 backdrop-blur-xl md:flex">
-        <Link href="/" className="flex items-center gap-2 border-b border-white/10 px-6 py-5 text-lg font-bold text-foreground">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white text-sm">
-            S
-          </span>
-          Socials <span className="text-brand">Wick</span>
+        <Link href="/" aria-label="SocialsWick home" className="block border-b border-white/10 px-6 py-5 text-foreground">
+          <Logo size="sm" />
         </Link>
         <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV.map((item) => (

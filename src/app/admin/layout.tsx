@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NotificationBell from "./NotificationBell";
@@ -36,11 +37,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 flex-col border-r border-white/10 bg-black/50 backdrop-blur-xl text-white md:flex">
-        <Link href="/" className="flex items-center gap-2 border-b border-white/10 px-6 py-5 text-lg font-bold">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white text-sm">
-            S
-          </span>
-          Socials <span className="text-violet-300">Wick</span>
+        <Link href="/" aria-label="SocialsWick home" className="block border-b border-white/10 px-6 py-5 text-white">
+          <Logo size="sm" />
         </Link>
         <div className="px-6 pt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Admin Panel

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import Logo from "@/components/Logo";
 
 export default async function Navbar() {
   const session = await auth();
@@ -7,9 +8,8 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white">S</span>
-          Socials <span className="text-brand">Wick</span>
+        <Link href="/" aria-label="SocialsWick home" className="text-foreground">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
