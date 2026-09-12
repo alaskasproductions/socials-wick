@@ -4,6 +4,8 @@ import { useMemo, useState, useActionState } from "react";
 import { placeOrderAction } from "@/lib/actions/customer";
 import { TIERS, categoryTier, displayName, serviceTier } from "@/lib/catalog";
 import { linkRuleFor } from "@/lib/link-rules";
+import { buildServiceGuide } from "@/lib/service-guide";
+import ServiceGuidePanel from "@/components/ServiceGuidePanel";
 import type { CatalogCategory } from "./NewOrderWorkspace";
 
 const inputClass =
@@ -110,17 +112,24 @@ export default function NewOrderForm({
             </p>
           </div>
         )}
-        {service?.description && (
-          <details className="mt-1">
-            <summary className="cursor-pointer text-xs text-brand hover:underline">Service description</summary>
-            <p className="mt-1 whitespace-pre-line text-xs text-slate-400">{displayName(service.description)}</p>
-          </details>
+        {service && category && (
+          <div className="mt-3">
+            <ServiceGuidePanel
+              guide={buildServiceGuide({
+                name: service.name,
+                categoryName: category.name,
+                min: service.min,
+                max: service.max,
+              })}
+              adminText={service.description ? displayName(service.description) : undefined}
+            />
+          </div>
         )}
       </div>
 
       <div>
         <label className="flex items-center gap-2 text-sm font-medium text-slate-200">
-          Link
+          {linkRule?.target ?? "Link"}
           {linkRule && (
             <span
               title={linkRule.hint}

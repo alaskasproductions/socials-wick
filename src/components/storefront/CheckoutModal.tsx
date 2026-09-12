@@ -6,6 +6,8 @@ import { startCheckoutAction } from "@/lib/actions/checkout";
 import { MIN_ORDER_EUR, minQuantityFor, normalizeLink, priceFor, type PlatformSection, type ServiceType } from "@/lib/packages";
 import QualityPicker from "./QualityPicker";
 import { linkRuleFor } from "@/lib/link-rules";
+import { buildServiceGuide } from "@/lib/service-guide";
+import ServiceGuidePanel from "@/components/ServiceGuidePanel";
 import { PLATFORMS, TIERS, type PlatformKey } from "@/lib/catalog";
 
 export type Viewer = { signedIn: boolean; email: string | null; balance: number };
@@ -348,7 +350,7 @@ function Wizard({
                   </p>
                   <div>
                     <label className="text-sm font-medium text-slate-200">
-                      {platformMeta?.label} {linkRule?.level === "post" ? linkRule.target : "username or profile link"}
+                      {linkRule?.target ?? "Link"}
                     </label>
                     <input
                       value={linkInput}
@@ -363,10 +365,17 @@ function Wizard({
                     {link && (
                       <p className="mt-1 break-all text-xs text-slate-500">Will be delivered to: {link}</p>
                     )}
-                    <p className="mt-2 text-xs text-slate-500">
-                      Always read the service description for the allowed link format — a wrong link
-                      format is cancelled automatically and cannot be refunded once delivery starts.
-                    </p>
+                    <div className="mt-3">
+                      <ServiceGuidePanel
+                        compact
+                        guide={buildServiceGuide({
+                          name: service.name,
+                          categoryName: service.categoryName,
+                          min: service.min,
+                          max: service.max,
+                        })}
+                      />
+                    </div>
                   </div>
                 </>
               )}

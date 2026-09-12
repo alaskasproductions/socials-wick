@@ -36,7 +36,7 @@ export default function EditServiceForm({
       {service.providerServiceId && (
         <p className="rounded-lg bg-blue-500/15 px-4 py-2 text-xs text-blue-400">
           Sourced from MoreThanPanel (service #{service.providerServiceId}). Editing the rate here
-          overrides the imported price until it's re-imported.
+          overrides the imported price until it is re-imported.
         </p>
       )}
 

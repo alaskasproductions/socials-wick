@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Reveal from "@/components/Reveal";
+import ServiceGuidePanel from "@/components/ServiceGuidePanel";
+import { buildServiceGuide } from "@/lib/service-guide";
 import { TIERS, displayName, serviceTier, type Tier } from "@/lib/catalog";
 
 export const metadata: Metadata = {
@@ -103,9 +105,22 @@ export default async function ServicesPage({
                             )}
                             <span>{displayName(s.name)}</span>
                           </div>
-                          {s.description && (
-                            <div className="mt-0.5 text-xs text-slate-400">{displayName(s.description)}</div>
-                          )}
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-xs text-brand hover:underline">
+                              Details &amp; required link
+                            </summary>
+                            <div className="mt-2 max-w-xl">
+                              <ServiceGuidePanel
+                                guide={buildServiceGuide({
+                                  name: s.name,
+                                  categoryName: cat.name,
+                                  min: s.min,
+                                  max: s.max,
+                                })}
+                                adminText={s.description ? displayName(s.description) : undefined}
+                              />
+                            </div>
+                          </details>
                         </td>
                         <td className="px-4 py-3 font-semibold text-brand">€{s.rate.toFixed(2)}</td>
                         <td className="px-4 py-3 text-slate-400">{s.min.toLocaleString("en-US")}</td>
