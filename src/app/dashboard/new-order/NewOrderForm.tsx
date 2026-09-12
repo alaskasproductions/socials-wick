@@ -141,7 +141,8 @@ export default function NewOrderForm({
         </label>
         <input
           name="link"
-          type="url"
+          type="text"
+          inputMode={linkRule?.level === "id" ? "numeric" : "url"}
           required
           value={link}
           onChange={(e) => {

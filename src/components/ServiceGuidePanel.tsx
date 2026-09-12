@@ -60,7 +60,7 @@ export default function ServiceGuidePanel({
       <div className="mt-3 rounded-lg border border-brand/25 bg-brand/10 px-3 py-2.5">
         <p className="font-semibold text-brand">🔗 {guide.link.label}</p>
         <p className="mt-1 text-slate-200">
-          Paste {guide.link.what}.
+          {guide.link.level === "id" ? "Enter" : "Paste"} {guide.link.what}.
         </p>
         <p className="mt-1 break-all font-mono text-[11px] text-slate-400">{guide.link.example}</p>
       </div>

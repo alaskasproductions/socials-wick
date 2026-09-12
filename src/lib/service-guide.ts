@@ -11,7 +11,7 @@
 export type GuidePlatform =
   | "instagram" | "tiktok" | "youtube" | "facebook" | "twitter" | "telegram" | "spotify"
   | "twitch" | "steam" | "discord" | "soundcloud" | "pinterest" | "linkedin" | "threads"
-  | "snapchat" | "reviews" | "website" | "other";
+  | "snapchat" | "reviews" | "website" | "gaming" | "other";
 
 type PlatformDef = { key: GuidePlatform; label: string; match: RegExp };
 
@@ -32,13 +32,32 @@ const PLATFORMS: PlatformDef[] = [
   { key: "pinterest", label: "Pinterest", match: /pinterest/i },
   { key: "linkedin", label: "LinkedIn", match: /linked\s?in/i },
   { key: "snapchat", label: "Snapchat", match: /snap\s?chat/i },
+  { key: "gaming", label: "Game top-up", match: /pubg|mobile\s?legends|mlbb|free\s?fire|genshin|age\s?of\s?empires|clash\s?of\s?clans|honor\s?of\s?kings|efootball|valorant|roblox|robux|diamonds?|gems?|uc|top[\s-]?up/i },
   { key: "reviews", label: "Reviews", match: /trustpilot|google\s*(maps|business|review)|review/i },
   { key: "website", label: "Website", match: /website|web\s?traffic|\btraffic\b|\bseo\b/i },
 ];
 
+const GAMES: { re: RegExp; label: string }[] = [
+  { re: /pubg/i, label: "PUBG Mobile" },
+  { re: /mobile\s?legends|mlbb/i, label: "Mobile Legends" },
+  { re: /free\s?fire/i, label: "Free Fire" },
+  { re: /genshin/i, label: "Genshin Impact" },
+  { re: /age\s?of\s?empires/i, label: "Age of Empires Mobile" },
+  { re: /clash\s?of\s?clans/i, label: "Clash of Clans" },
+  { re: /honor\s?of\s?kings/i, label: "Honor of Kings" },
+  { re: /efootball/i, label: "eFootball" },
+  { re: /valorant/i, label: "Valorant" },
+  { re: /roblox|robux/i, label: "Roblox" },
+];
+
 export function guidePlatformOf(text: string): { key: GuidePlatform; label: string } {
   const found = PLATFORMS.find((p) => p.match.test(text));
-  return found ? { key: found.key, label: found.label } : { key: "other", label: "Your account" };
+  if (!found) return { key: "other" as const, label: "Your account" };
+  if (found.key === "gaming") {
+    const game = GAMES.find((g) => g.re.test(text));
+    return { key: found.key, label: game ? game.label : found.label };
+  }
+  return { key: found.key, label: found.label };
 }
 
 export type LinkKind = {
@@ -47,7 +66,7 @@ export type LinkKind = {
   /** What the customer must paste, in a sentence. */
   what: string;
   example: string;
-  level: "profile" | "post" | "special";
+  level: "profile" | "post" | "special" | "id";
   /** Optional format check; when it fails the message is shown to the customer. */
   pattern?: RegExp;
   requirements: string[];
@@ -282,6 +301,7 @@ export function linkKindFor(text: string): LinkKind {
           what: "your Steam trade URL (or your profile link)",
           example: "https://steamcommunity.com/tradeoffer/new/?partner=XXXXXX&token=YYYYYY",
           level: "special",
+          pattern: /steamcommunity\.com\//i,
           requirements: [
             "Find your trade URL in Steam under Inventory → Trade Offers → Who can send me Trade Offers.",
             "Your Steam profile and inventory must be set to Public before delivery.",
@@ -295,6 +315,7 @@ export function linkKindFor(text: string): LinkKind {
         what: "the link to your Steam profile or group",
         example: "https://steamcommunity.com/id/yourprofile",
         level: "profile",
+        pattern: /steamcommunity\.com\//i,
         requirements: ["Your Steam profile must be set to Public.", "Custom URL links (/id/name) and numeric links (/profiles/7656…) both work."],
       };
 
@@ -374,6 +395,46 @@ export function linkKindFor(text: string): LinkKind {
         level: "profile",
         requirements: ["The account must be public."],
       };
+
+    case "gaming": {
+      const noPassword = "We never ask for your game password or login code — only the ID.";
+      const checkId = "Check the ID twice: a top-up sent to the wrong ID cannot be recovered or refunded.";
+      if (has(text, /mobile\s?legends|mlbb/i))
+        return {
+          label: "User ID + Zone ID",
+          what: "your Mobile Legends User ID with the Zone ID in brackets",
+          example: "123456789 (1234)",
+          level: "id",
+          requirements: [
+            "Open the game, tap your avatar and copy the ID shown under your name, e.g. 123456789 (1234).",
+            checkId,
+            noPassword,
+          ],
+        };
+      if (has(text, /pubg/i))
+        return {
+          label: "Player ID (UID)",
+          what: "your PUBG Mobile numeric player ID",
+          example: "5123456789",
+          level: "id",
+          requirements: [
+            "Find the ID in the game under Profile — it is the number below your nickname.",
+            checkId,
+            noPassword,
+          ],
+        };
+      return {
+        label: "Player ID",
+        what: "your in-game player ID (UID), exactly as it appears in your profile",
+        example: "123456789",
+        level: "id",
+        requirements: [
+          "Copy the ID from your in-game profile, including a server or zone number if the game has one.",
+          checkId,
+          noPassword,
+        ],
+      };
+    }
 
     case "reviews":
       return {
@@ -471,7 +532,8 @@ export function buildServiceGuide(service: {
       ? "High quality"
       : null;
 
-  const typeLabel = serviceTypeLabel(service.name);
+  let typeLabel = serviceTypeLabel(service.name);
+  if (platform === "gaming" && typeLabel === "Engagement") typeLabel = "Top-up";
   const isLiveService = link.level === "special" && /live|viewer/i.test(text);
 
   const notes: string[] = [];
@@ -482,6 +544,7 @@ export function buildServiceGuide(service: {
   if (has(service.name, /future/i)) notes.push("Future posts: each new post you publish receives the service automatically.");
   if (has(service.name, /monetiz/i)) notes.push("Monetization service: it helps you reach platform thresholds. Approval always remains the platform's decision.");
   if (has(service.name, /old\s?account/i)) notes.push("Delivered from aged accounts with an established history.");
+  if (platform === "gaming") notes.push("The exact amount delivered is the one written in the service name.");
   const unit = /\[\s*(\d[\d.,]*)\s*(points|coins|hours|minutes|mins|views|members|likes)\s*\]/i.exec(service.name);
   if (unit) notes.push(`One unit delivers ${unit[1]} ${unit[2].toLowerCase()}.`);
   if (has(service.name, /emoji|custom comment/i)) notes.push("Custom content: send the exact text or emojis to support right after ordering.");
@@ -492,7 +555,10 @@ export function buildServiceGuide(service: {
     platform,
     platformLabel,
     typeLabel,
-    heading: platformLabel.toLowerCase() === typeLabel.toLowerCase() ? typeLabel : `${platformLabel} ${typeLabel}`,
+    heading:
+      platformLabel.toLowerCase() === typeLabel.toLowerCase() || platformLabel.toLowerCase().endsWith(typeLabel.toLowerCase())
+        ? platformLabel
+        : `${platformLabel} ${typeLabel}`,
     geo,
     startTime: isLiveService ? "While your stream is live" : startTime,
     speed,
@@ -524,6 +590,11 @@ const TYPE_LABELS: { re: RegExp; label: string }[] = [
   { re: /award/i, label: "Awards" },
   { re: /review/i, label: "Reviews" },
   { re: /traffic|visit/i, label: "Visits" },
+  { re: /uc/i, label: "UC" },
+  { re: /diamond/i, label: "Diamonds" },
+  { re: /gems?/i, label: "Gems" },
+  { re: /robux/i, label: "Robux" },
+  { re: /top[\s-]?up/i, label: "Top-up" },
 ];
 
 export function serviceTypeLabel(name: string): string {

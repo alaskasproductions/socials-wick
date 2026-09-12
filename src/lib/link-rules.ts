@@ -3,7 +3,7 @@
 // Used by the storefront wizard, the dashboard order form and the server.
 import { linkKindFor, type LinkKind } from "@/lib/service-guide";
 
-export type LinkLevel = "profile" | "post" | "special";
+export type LinkLevel = "profile" | "post" | "special" | "id";
 
 export type LinkRule = {
   level: LinkLevel;
@@ -25,10 +25,17 @@ export function linkRuleFor(serviceName: string, categoryName: string): LinkRule
     target: kind.label,
     placeholder: kind.example,
     requirements: kind.requirements,
-    hint: `Paste ${kind.what}. Example: ${kind.example}${kind.requirements.length ? ` — ${kind.requirements[0]}` : ""}`,
+    hint: `${kind.level === "id" ? "Enter" : "Paste"} ${kind.what}. Example: ${kind.example}${kind.requirements.length ? ` — ${kind.requirements[0]}` : ""}`,
     check: (url) => {
       const value = url.trim();
       if (!value) return `${what} is required.`;
+
+      // Game top-ups take an in-game ID, optionally with a zone in brackets.
+      if (kind.level === "id") {
+        return /^\d{4,20}(\s*\(\s*\d{1,8}\s*\))?$/.test(value)
+          ? null
+          : `Enter ${kind.what} — for example ${kind.example}`;
+      }
 
       // Profile services also accept a bare @username.
       if (kind.level === "profile" && /^@?[A-Za-z0-9._-]{2,40}$/.test(value)) return null;

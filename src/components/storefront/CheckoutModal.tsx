@@ -89,7 +89,7 @@ function Wizard({
   const price = service && confirmedQty ? priceFor(service.rate, confirmedQty) : 0;
   const linkRule = service ? linkRuleFor(service.name, service.categoryName) : null;
   // Post-level services need the pasted URL as-is; profile-level ones accept a bare username.
-  const link = linkRule?.level === "post" ? linkInput.trim() : normalizeLink(platform, linkInput);
+  const link = linkRule?.level === "profile" ? normalizeLink(platform, linkInput) : linkInput.trim();
   const stepsToShow = viewer.signedIn ? STEPS.filter((s) => s.key !== "email") : STEPS;
   const currentKey = stepsToShow[step]?.key ?? "service";
 
