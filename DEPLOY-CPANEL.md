@@ -241,3 +241,20 @@ the app directory (override with the `UPLOAD_DIR` env var) and served by the
 but it is NOT in the repo: include it in backups together with
 `prisma/dev.db`. Do not move uploads into `public/` — a Next.js production
 server only serves `public/` files that existed at build time.
+
+## Safe builds (build then swap)
+
+`next build` deletes the dist folder before it starts, so a build that fails
+leaves no `.next/BUILD_ID` and Passenger serves nothing. Build into a scratch
+folder and swap it in only on success:
+
+```bash
+cd /home/socialswick/repositories/socials-wick && git checkout -- package-lock.json && git pull -q   && rm -rf .next-build   && NEXT_DIST_DIR=.next-build npx next build --webpack > /home/socialswick/sw-build.log 2>&1
+if [ -f .next-build/BUILD_ID ]; then rm -rf .next.old; mv .next .next.old; mv .next-build .next; touch tmp/restart.txt; fi
+```
+
+The cPanel account terminal (port 2083) is capped by Fork Bomb Protection at
+35 processes and 100 open files, and those are hard limits the account cannot
+raise, so `next build` usually fails there with EMFILE. Use the WHM root
+terminal with `runuser` for builds; the cPanel terminal is fine for reading
+logs and for the swap commands.
