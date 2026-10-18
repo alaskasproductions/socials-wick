@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { notifyAdminBySms } from "@/lib/sms";
 
 // In-app notification centre for admins (the bell in the admin header).
 // Every producer calls pushAdminNotification(); it never throws, so a
@@ -41,6 +42,10 @@ export async function pushAdminNotification(params: {
   } catch (err) {
     console.error("[admin-notify] failed to store notification:", err instanceof Error ? err.message : err);
   }
+
+  // Text alert (Admin → Settings → SMS). Not awaited: a slow SMS gateway must
+  // never hold up an order, and notifyAdminBySms never throws.
+  void notifyAdminBySms(params.type, params.title, params.body);
 }
 
 export function formatMoney(amount: number): string {
