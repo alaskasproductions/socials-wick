@@ -12,6 +12,10 @@
 # BUILD_ID, so a broken commit can never leave the site without a build.
 set -u
 
+# cron gives a bare PATH without /usr/sbin, where runuser lives.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
 APP_USER=socialswick
 APP_DIR=/home/socialswick/repositories/socials-wick
 HOME_DIR=/home/socialswick
@@ -41,6 +45,11 @@ as_app "cd $APP_DIR && git checkout -- package-lock.json 2>/dev/null; git fetch 
 
 LOCAL=$(as_app "cd $APP_DIR && git rev-parse HEAD")
 REMOTE=$(as_app "cd $APP_DIR && git rev-parse origin/main")
+
+if [ -z "$LOCAL" ] || [ -z "$REMOTE" ]; then
+  log "FAILED: could not read git revisions (is runuser available?)"
+  exit 1
+fi
 
 if [ "$LOCAL" = "$REMOTE" ] && [ "${1:-}" != "--force" ]; then
   exit 0
