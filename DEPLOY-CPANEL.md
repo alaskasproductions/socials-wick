@@ -258,3 +258,25 @@ The cPanel account terminal (port 2083) is capped by Fork Bomb Protection at
 raise, so `next build` usually fails there with EMFILE. Use the WHM root
 terminal with `runuser` for builds; the cPanel terminal is fine for reading
 logs and for the swap commands.
+
+## Automatic deploys (cron)
+
+`scripts/deploy.sh` deploys whatever is on `origin/main`. A root cron entry runs
+it every 5 minutes, so a push goes live by itself:
+
+```
+*/5 * * * * /home/socialswick/repositories/socials-wick/scripts/deploy.sh >/dev/null 2>&1
+```
+
+It must run as **root** (cron or the WHM terminal), because every step is run
+through `runuser -u socialswick`; a login shell hits the Fork Bomb Protection
+caps and `next build` hangs.
+
+- It only acts when `origin/main` has moved, and it skips commits whose subject
+  contains `[skip deploy]`.
+- `npm install` runs only when package.json or the lockfile changed; Prisma
+  migrations only when something under prisma/ changed, after backing up
+  `prisma/dev.db` (the last 10 backups are kept).
+- The build goes to `.next-build` and is swapped in only on success.
+- Log: `/home/socialswick/deploy.log`. Last result: `/home/socialswick/deploy-status.txt`.
+- Force one by hand: `scripts/deploy.sh --force`.
