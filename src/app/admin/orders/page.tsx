@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { orderStatusBadge } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { updateOrderStatusAction } from "@/lib/actions/admin";
 import { resendOrderToProviderAction } from "@/lib/actions/provider";
@@ -63,6 +64,11 @@ export default async function AdminOrdersPage() {
                   )}
                 </td>
                 <td className="px-5 py-3">
+                  <span
+                    className={`mb-1.5 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${orderStatusBadge(o).className}`}
+                  >
+                    {orderStatusBadge(o).text}
+                  </span>
                   <form action={updateOrderStatusAction} className="flex items-center gap-2">
                     <input type="hidden" name="id" value={o.id} />
                     <select

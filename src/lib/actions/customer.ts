@@ -19,8 +19,9 @@ export async function placeOrderAction(
   const session = await auth();
   if (!session?.user) return { error: "You must be logged in." };
 
+  let placed;
   try {
-    await placeOrder({
+    placed = await placeOrder({
       userId: session.user.id,
       serviceId: String(formData.get("serviceId") ?? ""),
       link: String(formData.get("link") ?? "").trim(),
@@ -33,7 +34,8 @@ export async function placeOrderAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/orders");
-  return { success: "Order placed successfully." };
+  // Show the customer the order itself, with its status and what happens next.
+  redirect(`/dashboard/orders/${placed.orderId}?placed=1`);
 }
 
 export async function requestFundsAction(
