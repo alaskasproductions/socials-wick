@@ -281,4 +281,4 @@ caps and `next build` hangs.
 - Log: `/home/socialswick/deploy.log`. Last result: `/home/socialswick/deploy-status.txt`.
 - Force one by hand: `scripts/deploy.sh --force`.
 
-<!-- deploy cron verified 2026-10-23 -->
+The cron was installed and verified on 2026-10-23.
