@@ -280,3 +280,5 @@ caps and `next build` hangs.
 - The build goes to `.next-build` and is swapped in only on success.
 - Log: `/home/socialswick/deploy.log`. Last result: `/home/socialswick/deploy-status.txt`.
 - Force one by hand: `scripts/deploy.sh --force`.
+
+<!-- deploy cron verified 2026-10-23 -->
