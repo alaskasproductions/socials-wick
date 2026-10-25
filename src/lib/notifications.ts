@@ -144,3 +144,51 @@ export async function notifyCustomerFundRequestReviewed(params: {
       `,
   });
 }
+
+/**
+ * Money back for an order the provider could not deliver. Sent from the
+ * background sync as well as from the admin panel, so the site address comes
+ * from the SEO settings rather than the request headers.
+ */
+export async function notifyCustomerOrderRefunded(params: {
+  customerEmail: string;
+  customerName: string;
+  orderId: string;
+  serviceName: string;
+  status: string;
+  quantity: number;
+  delivered: number;
+  amount: number;
+  balance: number;
+}): Promise<void> {
+  const { getSiteUrl } = await import("@/lib/seo-settings");
+  const siteUrl = await getSiteUrl();
+  const cancelled = params.status === "CANCELLED";
+  const headline = cancelled
+    ? "Your order could not be delivered, so we have refunded it."
+    : "Part of your order could not be delivered, so we have refunded that part.";
+
+  await safeSend({
+    to: params.customerEmail,
+    subject: cancelled
+      ? `Order cancelled and refunded — €${params.amount.toFixed(2)}`
+      : `Order partly delivered, €${params.amount.toFixed(2)} refunded`,
+    html: `
+      <p>Hi ${params.customerName},</p>
+      <p>${headline}</p>
+      <ul>
+        <li><strong>Order:</strong> ${params.orderId.slice(0, 8)}</li>
+        <li><strong>Service:</strong> ${params.serviceName}</li>
+        <li><strong>Ordered:</strong> ${params.quantity.toLocaleString("en-GB")}</li>
+        ${cancelled ? "" : `<li><strong>Delivered:</strong> ${params.delivered.toLocaleString("en-GB")}</li>`}
+        <li><strong>Refunded to your balance:</strong> €${params.amount.toFixed(2)}</li>
+        <li><strong>New balance:</strong> €${params.balance.toFixed(2)}</li>
+      </ul>
+      <p>The money is back in your SocialsWick balance and can be spent on any service right away.</p>
+      <p><a href="${siteUrl}/dashboard/orders/${params.orderId}">See the order →</a></p>
+      <p>A common reason for a cancellation is a link the service cannot accept, for example a profile
+      link where a post link is needed. The order page shows which link that service expects.</p>
+      <p>Questions? Just reply to this email or use <a href="${siteUrl}/contact">our contact page</a>.</p>
+    `,
+  });
+}

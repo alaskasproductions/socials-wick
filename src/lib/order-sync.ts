@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import * as provider from "@/lib/providers/morethanpanel";
 import { pushAdminNotification } from "@/lib/admin-notify";
 import { displayName } from "@/lib/catalog";
+import { refundOrder } from "@/lib/refunds";
 
 export type SyncResult = { synced: number; total: number; error?: string };
 
@@ -47,6 +48,12 @@ export async function syncPendingOrders(): Promise<SyncResult> {
       },
     });
     synced++;
+
+    // Give the money back for anything the provider could not deliver.
+    // refundOrder is idempotent, so a repeated PARTIAL sync only tops up the difference.
+    if (nextStatus === "CANCELLED" || nextStatus === "PARTIAL") {
+      await refundOrder(order.id);
+    }
 
     // Tell the admin when an order finishes or goes wrong (not for every progress tick).
     if (nextStatus !== order.status && ["COMPLETED", "PARTIAL", "CANCELLED"].includes(nextStatus)) {

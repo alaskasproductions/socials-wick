@@ -125,6 +125,10 @@ model Order {
   status          OrderStatus @default(PENDING)
   providerOrderId String? // order id returned by MoreThanPanel
   providerError   String? // last error message if forwarding to provider failed
+  // Money already given back for this order (cancelled in full, or the
+  // undelivered part of a partial delivery). Kept so a refund can never run twice.
+  refunded        Float       @default(0)
+  refundedAt      DateTime?
   createdAt       DateTime    @default(now())
 }
 

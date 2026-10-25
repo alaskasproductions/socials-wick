@@ -50,7 +50,7 @@ export default function VivaPaymentForm() {
         {pending ? "Redirecting to checkout…" : "Pay with Card — via Viva Wallet"}
       </button>
       <p className="text-xs text-slate-500">
-        You'll be redirected to Viva Wallet's secure checkout. Your balance is credited
+        You&apos;ll be redirected to Viva Wallet&apos;s secure checkout. Your balance is credited
         automatically the moment payment is confirmed.
       </p>
     </form>

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Order" ADD COLUMN "refunded" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "Order" ADD COLUMN "refundedAt" DATETIME;

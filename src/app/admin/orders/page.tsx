@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { orderStatusBadge } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
-import { updateOrderStatusAction } from "@/lib/actions/admin";
+import { refundOrderAction, updateOrderStatusAction } from "@/lib/actions/admin";
+import { refundableAmount } from "@/lib/refunds";
 import { resendOrderToProviderAction } from "@/lib/actions/provider";
 
 const STATUSES = ["PENDING", "IN_PROGRESS", "COMPLETED", "PARTIAL", "CANCELLED"] as const;
@@ -34,7 +35,9 @@ export default async function AdminOrdersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {orders.map((o) => (
+            {orders.map((o) => {
+              const owed = refundableAmount(o);
+              return (
               <tr key={o.id}>
                 <td className="px-5 py-3">
                   <div className="font-medium text-foreground">{o.user.name}</div>
@@ -69,6 +72,19 @@ export default async function AdminOrdersPage() {
                   >
                     {orderStatusBadge(o).text}
                   </span>
+                  {o.refunded > 0 && (
+                    <span className="mb-1.5 block text-xs text-emerald-400">
+                      Refunded €{o.refunded.toFixed(2)}
+                    </span>
+                  )}
+                  {owed > 0 && (
+                    <form action={refundOrderAction} className="mb-1.5">
+                      <input type="hidden" name="id" value={o.id} />
+                      <button className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20">
+                        Refund €{owed.toFixed(2)}
+                      </button>
+                    </form>
+                  )}
                   <form action={updateOrderStatusAction} className="flex items-center gap-2">
                     <input type="hidden" name="id" value={o.id} />
                     <select
@@ -88,7 +104,8 @@ export default async function AdminOrdersPage() {
                   </form>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {orders.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-5 py-6 text-center text-slate-500">

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as notify from "@/lib/notifications";
+import { refundableAmount, refundOrder } from "@/lib/refunds";
 
 async function requireAdmin() {
   const session = await auth();
@@ -167,6 +168,21 @@ export async function updateOrderStatusAction(formData: FormData): Promise<void>
     where: { id },
     data: { status: status as (typeof ORDER_STATUSES)[number] },
   });
+
+  // Cancelling or marking an order partial gives the customer their money back.
+  if (status === "CANCELLED" || status === "PARTIAL") {
+    await refundOrder(id);
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/dashboard/orders");
+}
+
+/** Manual refund button, for orders that were cancelled before refunds existed. */
+export async function refundOrderAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (id) await refundOrder(id);
   revalidatePath("/admin/orders");
   revalidatePath("/dashboard/orders");
 }

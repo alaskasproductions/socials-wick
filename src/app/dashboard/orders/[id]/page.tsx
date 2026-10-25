@@ -6,6 +6,7 @@ import { displayName, serviceTier, TIERS } from "@/lib/catalog";
 import { buildServiceGuide } from "@/lib/service-guide";
 import ServiceGuidePanel from "@/components/ServiceGuidePanel";
 import { orderStatusBadge } from "@/lib/order-status";
+import { refundableAmount } from "@/lib/refunds";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,12 @@ const STATUS: Record<string, { what: string }> = {
     what: "The full quantity has been delivered.",
   },
   PARTIAL: {
-    what: "Only part of the order could be delivered. The undelivered amount has been refunded to your balance.",
+    what: "Only part of the order could be delivered, so the rest was refunded to your balance.",
   },
   CANCELLED: {
-    what: "This order was cancelled and the full amount was refunded to your balance.",
+    what:
+      "The provider could not deliver this order, so it was cancelled and the amount went back to your balance. " +
+      "The usual cause is a link the service cannot accept, so check the link rules below before ordering again.",
   },
 };
 
@@ -53,6 +56,7 @@ export default async function OrderDetailsPage({
 
   const status = STATUS[order.status] ?? STATUS.PENDING;
   const badge = orderStatusBadge(order);
+  const owed = refundableAmount(order);
   const tier = TIERS[serviceTier(order.service.name, order.service.category.name)];
   const delivered = Math.max(0, order.quantity - order.remains);
   const guide = buildServiceGuide({
@@ -85,6 +89,20 @@ export default async function OrderDetailsPage({
               All my orders
             </Link>
           </div>
+        </div>
+      )}
+
+      {order.refunded > 0 && !sp.placed && (
+        <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4">
+          <p className="font-semibold text-emerald-400">
+            €{order.refunded.toFixed(2)} was refunded to your balance
+          </p>
+          <p className="mt-1 text-sm text-slate-300">
+            {order.status === "CANCELLED"
+              ? "Nothing was delivered for this order, so you were charged nothing in the end."
+              : "You only paid for the part that was delivered."}{" "}
+            The money is in your balance and can be spent on any service.
+          </p>
         </div>
       )}
 
@@ -137,6 +155,25 @@ export default async function OrderDetailsPage({
           <Row label="Remaining">{order.remains.toLocaleString("en-GB")}</Row>
         )}
         <Row label="Charged">€{order.charge.toFixed(2)}</Row>
+        {order.refunded > 0 && (
+          <Row label="Refunded">
+            <span className="font-semibold text-emerald-400">€{order.refunded.toFixed(2)}</span>
+            <span className="text-slate-400">
+              {" "}
+              back in your balance
+              {order.refundedAt
+                ? ` on ${order.refundedAt.toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" })}`
+                : ""}
+            </span>
+          </Row>
+        )}
+        {owed > 0 && (
+          <Row label="Refund">
+            <span className="text-amber-300">
+              €{owed.toFixed(2)} is being refunded to your balance. Contact support if you do not see it shortly.
+            </span>
+          </Row>
+        )}
         <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-start sm:gap-4">
           <span className="w-40 shrink-0 text-sm text-slate-400">Placed</span>
           <span className="text-sm text-slate-100">

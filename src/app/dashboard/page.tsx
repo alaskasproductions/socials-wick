@@ -2,14 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { displayName } from "@/lib/catalog";
-
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-500/15 text-amber-400",
-  IN_PROGRESS: "bg-blue-500/15 text-blue-400",
-  COMPLETED: "bg-green-500/15 text-green-400",
-  PARTIAL: "bg-orange-500/15 text-orange-400",
-  CANCELLED: "bg-red-500/15 text-red-400",
-};
+import { orderStatusBadge } from "@/lib/order-status";
 
 export default async function DashboardOverviewPage() {
   const session = await auth();
@@ -91,18 +84,33 @@ export default async function DashboardOverviewPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {orders.map((o) => (
-              <tr key={o.id}>
-                <td className="px-5 py-3">{displayName(o.service.name)}</td>
-                <td className="px-5 py-3">{o.quantity}</td>
-                <td className="px-5 py-3">€{o.charge.toFixed(2)}</td>
-                <td className="px-5 py-3">
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[o.status]}`}>
-                    {o.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {orders.map((o) => {
+              const badge = orderStatusBadge(o);
+              return (
+                <tr key={o.id} className="hover:bg-white/[0.03]">
+                  <td className="px-5 py-3">
+                    <Link href={`/dashboard/orders/${o.id}`} className="font-medium text-foreground hover:text-brand">
+                      {displayName(o.service.name)}
+                    </Link>
+                    <span className="block text-xs text-slate-500">Order {o.id.slice(0, 8)} · view details</span>
+                  </td>
+                  <td className="px-5 py-3">{o.quantity.toLocaleString("en-GB")}</td>
+                  <td className="px-5 py-3">
+                    €{o.charge.toFixed(2)}
+                    {o.refunded > 0 && (
+                      <span className="block text-xs text-emerald-400">€{o.refunded.toFixed(2)} refunded</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3">
+                    <Link href={`/dashboard/orders/${o.id}`} className="inline-block">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${badge.className}`}>
+                        {badge.text}
+                      </span>
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
             {orders.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-5 py-6 text-center text-slate-500">

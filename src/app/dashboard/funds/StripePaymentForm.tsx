@@ -50,7 +50,7 @@ export default function StripePaymentForm() {
         {pending ? "Redirecting to checkout…" : "Pay with Card — via Stripe"}
       </button>
       <p className="text-xs text-slate-500">
-        You'll be redirected to Stripe's secure checkout. Your balance is credited automatically
+        You&apos;ll be redirected to Stripe&apos;s secure checkout. Your balance is credited automatically
         the moment payment is confirmed.
       </p>
     </form>

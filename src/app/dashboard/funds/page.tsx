@@ -33,7 +33,7 @@ export default async function FundsPage() {
 
           {noGatewaysEnabled && (
             <div className="mt-6 rounded-lg bg-amber-500/15 px-4 py-3 text-sm text-amber-400">
-              Card payments aren't set up yet. Use the manual request form below, or ask an admin
+              Card payments aren&apos;t set up yet. Use the manual request form below, or ask an admin
               to enable a payment gateway.
             </div>
           )}

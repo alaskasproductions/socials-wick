@@ -56,7 +56,12 @@ export default async function OrderHistoryPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-5 py-3">€{o.charge.toFixed(2)}</td>
+                <td className="px-5 py-3">
+                  €{o.charge.toFixed(2)}
+                  {o.refunded > 0 && (
+                    <span className="block text-xs text-emerald-400">€{o.refunded.toFixed(2)} refunded</span>
+                  )}
+                </td>
                 <td className="px-5 py-3">
                   <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${badge.className}`}>
                     {badge.text}
