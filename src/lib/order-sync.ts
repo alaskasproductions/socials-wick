@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import * as provider from "@/lib/providers/morethanpanel";
 import { pushAdminNotification } from "@/lib/admin-notify";
+import { pushCustomerNotification } from "@/lib/customer-notify";
 import { displayName } from "@/lib/catalog";
 import { refundOrder } from "@/lib/refunds";
 
@@ -48,6 +49,31 @@ export async function syncPendingOrders(): Promise<SyncResult> {
       },
     });
     synced++;
+
+    // Tell the customer when their order reaches a final state.
+    if (nextStatus !== order.status && ["COMPLETED", "PARTIAL", "CANCELLED"].includes(nextStatus)) {
+      const name = displayName(order.service.name);
+      const delivered = Math.max(0, order.quantity - (Number(result.remains) || 0));
+      const text =
+        nextStatus === "COMPLETED"
+          ? { title: `Order delivered — ${name}`, body: `All ${order.quantity.toLocaleString("en-GB")} delivered.` }
+          : nextStatus === "PARTIAL"
+            ? {
+                title: `Order partly delivered — ${name}`,
+                body: `${delivered.toLocaleString("en-GB")} of ${order.quantity.toLocaleString("en-GB")} delivered. The rest is refunded to your balance.`,
+              }
+            : {
+                title: `Order cancelled — ${name}`,
+                body: "The provider could not deliver this order. The full amount goes back to your balance.",
+              };
+      await pushCustomerNotification({
+        userId: order.userId,
+        type: "ORDER_STATUS",
+        title: text.title,
+        body: text.body,
+        href: `/dashboard/orders/${order.id}`,
+      });
+    }
 
     // Give the money back for anything the provider could not deliver.
     // refundOrder is idempotent, so a repeated PARTIAL sync only tops up the difference.

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { displayName } from "@/lib/catalog";
 import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 import * as notify from "@/lib/notifications";
+import { pushCustomerNotification } from "@/lib/customer-notify";
 
 // Money back for orders the provider could not deliver.
 //
@@ -70,6 +71,17 @@ export async function refundOrder(orderId: string): Promise<RefundResult> {
       delivered: Math.max(0, order.quantity - order.remains),
       amount,
       balance: user.balance,
+    });
+
+    await pushCustomerNotification({
+      userId: order.userId,
+      type: "REFUND",
+      title: `${formatMoney(amount)} refunded to your balance`,
+      body:
+        order.status === "CANCELLED"
+          ? `Order ${order.id.slice(0, 8)} (${serviceName}) could not be delivered, so you were charged nothing.`
+          : `Order ${order.id.slice(0, 8)} (${serviceName}) was only partly delivered, so you paid for the delivered part only.`,
+      href: `/dashboard/orders/${order.id}`,
     });
 
     await pushAdminNotification({

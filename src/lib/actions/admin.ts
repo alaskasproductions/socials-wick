@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as notify from "@/lib/notifications";
+import { pushCustomerNotification, formatMoney as money } from "@/lib/customer-notify";
 import { refundableAmount, refundOrder } from "@/lib/refunds";
 
 async function requireAdmin() {
@@ -258,6 +259,20 @@ export async function reviewFundRequestAction(formData: FormData): Promise<void>
       data: { status: "REJECTED" },
     });
   }
+
+  await pushCustomerNotification({
+    userId: fundRequest.userId,
+    type: "FUNDS",
+    title:
+      decision === "APPROVED"
+        ? `${money(fundRequest.amount)} added to your balance`
+        : `Top-up request for ${money(fundRequest.amount)} was declined`,
+    body:
+      decision === "APPROVED"
+        ? "Your top-up request was approved and the money is in your balance."
+        : "Your top-up request was not approved. Contact support if you think this is a mistake.",
+    href: "/dashboard/funds",
+  });
 
   await notify.notifyCustomerFundRequestReviewed({
     customerEmail: fundRequest.user.email,

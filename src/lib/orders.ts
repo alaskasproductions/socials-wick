@@ -4,6 +4,7 @@ import * as notify from "@/lib/notifications";
 import { displayName } from "@/lib/catalog";
 import { linkRuleFor } from "@/lib/link-rules";
 import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
+import { pushCustomerNotification } from "@/lib/customer-notify";
 
 export class OrderError extends Error {}
 
@@ -107,6 +108,14 @@ export async function placeOrder(params: {
       charge,
     }),
   ]);
+
+  await pushCustomerNotification({
+    userId: user.id,
+    type: "ORDER",
+    title: `Order placed — ${quantity.toLocaleString("en-GB")} × ${displayName(service.name)}`,
+    body: `Charged €${charge.toFixed(2)}. We will tell you here as soon as delivery starts and when it finishes.`,
+    href: `/dashboard/orders/${order.id}`,
+  });
 
   return { orderId: order.id, charge, serviceName: service.name };
 }

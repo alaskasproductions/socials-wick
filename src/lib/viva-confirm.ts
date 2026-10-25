@@ -3,6 +3,7 @@ import * as viva from "@/lib/providers/viva";
 import * as notify from "@/lib/notifications";
 import { placeOrder } from "@/lib/orders";
 import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
+import { pushCustomerNotification, formatMoney as money } from "@/lib/customer-notify";
 
 export type ConfirmResult =
   | { status: "confirmed"; amount: number; orderId?: string; orderError?: string }
@@ -48,6 +49,14 @@ export async function confirmVivaPayment(
       where: { id: fundRequest.userId },
       data: { balance: { increment: fundRequest.amount } },
     });
+    await pushCustomerNotification({
+      userId: fundRequest.userId,
+      type: "FUNDS",
+      title: `${money(fundRequest.amount)} added to your balance`,
+      body: `Your payment was confirmed. New balance: ${money(user.balance)}.`,
+      href: "/dashboard/funds",
+    });
+
     await notify.notifyCustomerPaymentReceipt({
       customerEmail: user.email,
       customerName: user.name,

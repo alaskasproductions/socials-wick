@@ -2,20 +2,28 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import CustomerNotificationBell from "./CustomerNotificationBell";
+import { serializeCustomerNotification } from "@/lib/customer-notify";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: "🏠" },
   { href: "/dashboard/new-order", label: "New Order", icon: "🛒" },
   { href: "/dashboard/orders", label: "Order History", icon: "📦" },
   { href: "/dashboard/funds", label: "Add Funds", icon: "💳" },
+  { href: "/dashboard/notifications", label: "Notifications", icon: "🔔" },
   { href: "/dashboard/account", label: "Account", icon: "🔐" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const user = session?.user
-    ? await prisma.user.findUnique({ where: { id: session.user.id } })
-    : null;
+  const userId = session?.user?.id;
+  const [user, unread, latest] = await Promise.all([
+    userId ? prisma.user.findUnique({ where: { id: userId } }) : null,
+    userId ? prisma.customerNotification.count({ where: { userId, readAt: null } }) : 0,
+    userId
+      ? prisma.customerNotification.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 12 })
+      : [],
+  ]);
 
   return (
     <div className="flex min-h-screen">
@@ -56,6 +64,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="rounded-lg bg-brand/10 px-4 py-2 text-sm font-semibold text-brand">
               Balance: €{(user?.balance ?? 0).toFixed(2)}
             </div>
+            <CustomerNotificationBell
+              // Remount when the count changes so the badge follows a server action
+              // (mark all read) immediately instead of waiting for the next poll.
+              key={unread}
+              initialUnread={unread}
+              initialItems={latest.map(serializeCustomerNotification)}
+            />
             <span className="text-sm text-slate-400">{user?.name}</span>
           </div>
         </header>
