@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useActionState } from "react";
-import { placeOrderAction } from "@/lib/actions/customer";
+import { payAndPlaceOrderAction, placeOrderAction } from "@/lib/actions/customer";
 import { TIERS, categoryTier, displayName, serviceTier } from "@/lib/catalog";
 import { linkRuleFor } from "@/lib/link-rules";
 import { buildServiceGuide } from "@/lib/service-guide";
@@ -15,14 +16,19 @@ export default function NewOrderForm({
   categories,
   categoryId,
   serviceId,
+  balance,
+  cardGateway,
   onChange,
 }: {
   categories: CatalogCategory[];
   categoryId: string;
   serviceId: string;
+  balance: number;
+  cardGateway: "viva" | "stripe" | null;
   onChange: (categoryId: string, serviceId: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(placeOrderAction, undefined);
+  const [payState, payAction, paying] = useActionState(payAndPlaceOrderAction, undefined);
   const [quantity, setQuantity] = useState(0);
   const [link, setLink] = useState("");
   const [linkError, setLinkError] = useState<string | null>(null);
@@ -36,6 +42,9 @@ export default function NewOrderForm({
     : null;
   const selectedTier = service && category ? TIERS[serviceTier(service.name, category.name)] : null;
   const linkRule = service && category ? linkRuleFor(service.name, category.name) : null;
+  // What the customer is missing for this order, and the smallest card payment that covers it.
+  const short = service && charge > 0 ? Math.max(0, Math.round((charge - balance) * 100) / 100) : 0;
+  const topUp = Math.max(1, short);
 
   return (
     <form
@@ -179,15 +188,56 @@ export default function NewOrderForm({
 
       <div className="rounded-lg bg-brand/10 px-4 py-3 text-sm font-semibold text-brand">
         Estimated Charge: €{charge.toFixed(2)}
+        <span className="ml-2 font-normal text-slate-400">Balance: €{balance.toFixed(2)}</span>
       </div>
 
-      <button
-        type="submit"
-        disabled={pending || !service}
-        className="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-      >
-        {pending ? "Placing order…" : "Place Order"}
-      </button>
+      {cardGateway && <input type="hidden" name="gateway" value={cardGateway} />}
+
+      {payState?.error && (
+        <p className="rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-400">{payState.error}</p>
+      )}
+
+      {short > 0 ? (
+        <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+          <p className="text-sm font-semibold text-amber-300">
+            You need €{short.toFixed(2)} more for this order.
+          </p>
+          {cardGateway ? (
+            <>
+              <p className="text-xs text-slate-300">
+                Pay it by card now and we place this order for you the moment the payment clears
+                {topUp > short ? ` (the minimum card payment is €1, so €${(topUp - short).toFixed(2)} stays in your balance)` : ""}.
+              </p>
+              <button
+                type="submit"
+                formAction={payAction}
+                disabled={paying || !service}
+                className="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+              >
+                {paying ? "Opening secure checkout…" : `Pay €${topUp.toFixed(2)} and place order`}
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/dashboard/funds"
+              className="block rounded-lg bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-brand-dark"
+            >
+              Add funds
+            </Link>
+          )}
+          <Link href="/dashboard/funds" className="block text-center text-xs text-slate-400 hover:text-brand">
+            Other payment methods
+          </Link>
+        </div>
+      ) : (
+        <button
+          type="submit"
+          disabled={pending || !service}
+          className="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        >
+          {pending ? "Placing order…" : "Place Order"}
+        </button>
+      )}
     </form>
   );
 }

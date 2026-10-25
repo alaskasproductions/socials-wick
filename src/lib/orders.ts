@@ -42,7 +42,7 @@ export async function placeOrder(params: {
   const charge = orderCharge(service.rate, quantity);
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new OrderError("User not found.");
-  if (user.balance < charge) throw new OrderError("Insufficient balance. Please add funds first.");
+  if (user.balance < charge) throw new OrderError("Not enough balance for this order. Use the card button under the order form to pay the difference, or add funds first.");
 
   const [, order] = await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { balance: { decrement: charge } } }),

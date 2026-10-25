@@ -1,7 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { OrderError, placeOrder } from "@/lib/orders";
+import { OrderError, orderCharge, placeOrder } from "@/lib/orders";
+import { linkRuleFor } from "@/lib/link-rules";
+import { displayName } from "@/lib/catalog";
 import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -159,4 +161,94 @@ export async function startStripePaymentAction(
   });
 
   redirect(checkoutSession.url);
+}
+
+/**
+ * Not enough balance for an order: charge the difference on a card and place
+ * the order automatically once the payment clears (the same mechanism the
+ * landing-page checkout uses). The customer never has to come back and
+ * re-enter the order.
+ */
+export async function payAndPlaceOrderAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await auth();
+  if (!session?.user) return { error: "You must be logged in." };
+
+  const serviceId = String(formData.get("serviceId") ?? "");
+  const link = String(formData.get("link") ?? "").trim();
+  const quantity = Number(formData.get("quantity") ?? 0);
+  const gateway = String(formData.get("gateway") ?? "viva");
+
+  const [user, service] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id } }),
+    prisma.service.findUnique({ where: { id: serviceId }, include: { category: { select: { name: true } } } }),
+  ]);
+  if (!user) return { error: "User not found." };
+  if (!service || !service.active) return { error: "Service not found." };
+  if (!quantity || quantity < service.min || quantity > service.max) {
+    return { error: `Quantity must be between ${service.min} and ${service.max}.` };
+  }
+  const linkProblem = linkRuleFor(service.name, service.category.name).check(link);
+  if (linkProblem) return { error: linkProblem };
+
+  const charge = orderCharge(service.rate, quantity);
+  const shortfall = Math.max(0, Math.round((charge - user.balance) * 100) / 100);
+  if (shortfall <= 0) {
+    return { error: "Your balance already covers this order — press Place Order." };
+  }
+  // Card gateways will not take a few cents, so top up at least €1; anything
+  // above the shortfall simply stays in the balance.
+  const amount = Math.max(1, shortfall);
+
+  if (gateway === "stripe") {
+    let checkoutSession: { sessionId: string; url: string };
+    try {
+      checkoutSession = await stripe.createCheckoutSession({ amount, email: user.email, userId: user.id });
+    } catch (err) {
+      return { error: err instanceof stripe.StripeError ? err.message : "Could not start payment." };
+    }
+    await prisma.fundRequest.create({
+      data: {
+        userId: user.id,
+        amount,
+        method: "Stripe (Card)",
+        status: "PENDING",
+        stripeSessionId: checkoutSession.sessionId,
+        checkoutServiceId: service.id,
+        checkoutQuantity: quantity,
+        checkoutLink: link,
+      },
+    });
+    redirect(checkoutSession.url);
+  }
+
+  let order: { orderCode: string; checkoutUrl: string };
+  try {
+    order = await viva.createPaymentOrder({
+      amount,
+      email: user.email,
+      fullName: user.name,
+      customerTrns: `${quantity} × ${displayName(service.name)}`,
+      merchantTrns: user.id,
+    });
+  } catch (err) {
+    return { error: err instanceof viva.VivaError ? err.message : "Could not start payment." };
+  }
+
+  await prisma.fundRequest.create({
+    data: {
+      userId: user.id,
+      amount,
+      method: "Viva Wallet (Card)",
+      status: "PENDING",
+      vivaOrderCode: order.orderCode,
+      checkoutServiceId: service.id,
+      checkoutQuantity: quantity,
+      checkoutLink: link,
+    },
+  });
+
+  redirect(order.checkoutUrl);
 }

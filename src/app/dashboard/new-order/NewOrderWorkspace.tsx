@@ -19,7 +19,15 @@ export type CatalogCategory = {
   services: CatalogService[];
 };
 
-export default function NewOrderWorkspace({ categories }: { categories: CatalogCategory[] }) {
+export default function NewOrderWorkspace({
+  categories,
+  balance,
+  cardGateway,
+}: {
+  categories: CatalogCategory[];
+  balance: number;
+  cardGateway: "viva" | "stripe" | null;
+}) {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [serviceId, setServiceId] = useState(categories[0]?.services[0]?.id ?? "");
 
@@ -44,6 +52,8 @@ export default function NewOrderWorkspace({ categories }: { categories: CatalogC
           <h3 className="text-base font-semibold text-foreground">Order details</h3>
           <div className="mt-4">
             <NewOrderForm
+          balance={balance}
+          cardGateway={cardGateway}
               categories={categories}
               categoryId={categoryId}
               serviceId={serviceId}

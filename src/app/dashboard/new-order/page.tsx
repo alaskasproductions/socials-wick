@@ -1,11 +1,20 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import * as viva from "@/lib/providers/viva";
+import * as stripe from "@/lib/providers/stripe";
 import NewOrderWorkspace from "./NewOrderWorkspace";
 
 export default async function NewOrderPage() {
-  const categories = await prisma.category.findMany({
-    include: { services: { where: { active: true }, orderBy: { name: "asc" } } },
-    orderBy: { position: "asc" },
-  });
+  const session = await auth();
+  const [categories, user, vivaEnabled, stripeEnabled] = await Promise.all([
+    prisma.category.findMany({
+      include: { services: { where: { active: true }, orderBy: { name: "asc" } } },
+      orderBy: { position: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: session!.user.id }, select: { balance: true } }),
+    viva.isEnabled(),
+    stripe.isEnabled(),
+  ]);
 
   // Categories without an active service would be dead entries in the form's dropdown.
   const catalog = categories.filter((c) => c.services.length > 0).map((c) => ({
@@ -28,7 +37,11 @@ export default async function NewOrderPage() {
         Browse the catalog, pick a service, then enter your link and quantity on the right.
       </p>
       <div className="mt-6">
-        <NewOrderWorkspace categories={catalog} />
+        <NewOrderWorkspace
+          categories={catalog}
+          balance={user?.balance ?? 0}
+          cardGateway={vivaEnabled ? "viva" : stripeEnabled ? "stripe" : null}
+        />
       </div>
     </div>
   );
