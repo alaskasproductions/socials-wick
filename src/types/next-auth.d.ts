@@ -6,12 +6,15 @@ declare module "next-auth" {
       id: string;
       role: "ADMIN" | "CUSTOMER";
       verified: boolean;
+      /** Set while an admin is signed in as this customer. */
+      impersonatedBy?: string;
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: "ADMIN" | "CUSTOMER";
     verified?: boolean;
+    impersonatedBy?: string;
   }
 }
 
@@ -20,5 +23,6 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: "ADMIN" | "CUSTOMER";
     verified?: boolean;
+    impersonatedBy?: string;
   }
 }

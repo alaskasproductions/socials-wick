@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { decryptSecret, verifyPreauth, verifyTotp } from "@/lib/totp";
+import { decryptSecret, verifyImpersonation, verifyPreauth, verifyTotp } from "@/lib/totp";
 import type { User } from "@prisma/client";
 
 function toAuthUser(user: User) {
@@ -32,8 +32,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // /login/2fa exchanges token + 6-digit code for the session.
         preauth: { type: "text" },
         code: { type: "text" },
+        // Admin "Sign in as": a one-minute token signed by the server.
+        impersonation: { type: "text" },
       },
       authorize: async (credentials) => {
+        const impersonation = credentials?.impersonation as string | undefined;
+        if (impersonation) {
+          const claim = verifyImpersonation(impersonation);
+          if (!claim) return null;
+          const [target, admin] = await Promise.all([
+            prisma.user.findUnique({ where: { id: claim.userId } }),
+            prisma.user.findUnique({ where: { id: claim.adminId } }),
+          ]);
+          if (!target || !admin || admin.role !== "ADMIN" || admin.status === "BANNED") return null;
+          // Returning to your own admin account is the one self-target allowed.
+          if (target.role === "ADMIN" && target.id !== admin.id) return null;
+          return { ...toAuthUser(target), impersonatedBy: target.id === admin.id ? undefined : admin.id };
+        }
+
         const preauth = credentials?.preauth as string | undefined;
         if (preauth) {
           const userId = verifyPreauth(preauth);
@@ -68,6 +84,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = (user as { role: string }).role;
         token.id = user.id as string;
         token.verified = (user as { verified: boolean }).verified;
+        token.impersonatedBy = (user as { impersonatedBy?: string }).impersonatedBy;
       }
       return token;
     },
@@ -76,6 +93,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.role = token.role as "ADMIN" | "CUSTOMER";
         session.user.verified = token.verified as boolean;
+        session.user.impersonatedBy = token.impersonatedBy as string | undefined;
       }
       return session;
     },

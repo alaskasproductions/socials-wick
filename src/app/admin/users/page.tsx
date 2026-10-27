@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { resetUserTotpAction, toggleUserStatusAction } from "@/lib/actions/admin";
+import { impersonateUserAction } from "@/lib/actions/impersonation";
 import AdjustBalanceForm from "./AdjustBalanceForm";
 
 export default async function AdminUsersPage() {
@@ -66,12 +67,23 @@ export default async function AdminUsersPage() {
                   <AdjustBalanceForm userId={u.id} />
                 </td>
                 <td className="px-5 py-3 text-right">
-                  <form action={toggleUserStatusAction}>
-                    <input type="hidden" name="id" value={u.id} />
-                    <button className="text-xs font-semibold text-red-400 hover:underline">
-                      {u.status === "ACTIVE" ? "Ban" : "Unban"}
-                    </button>
-                  </form>
+                  <div className="flex items-center justify-end gap-3">
+                    <form action={impersonateUserAction}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <button
+                        className="text-xs font-semibold text-brand hover:underline"
+                        title="Open this customer's dashboard as them. You can switch back from the banner."
+                      >
+                        Sign in as
+                      </button>
+                    </form>
+                    <form action={toggleUserStatusAction}>
+                      <input type="hidden" name="id" value={u.id} />
+                      <button className="text-xs font-semibold text-red-400 hover:underline">
+                        {u.status === "ACTIVE" ? "Ban" : "Unban"}
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -141,3 +141,45 @@ export function verifyPreauth(token: string | undefined): string | null {
     return null;
   }
 }
+
+// ---- Impersonation token: lets an admin open a customer's dashboard ----
+//
+// Signed with the same server key and valid for one minute. It carries both
+// the target user and the admin who asked, so the session can show a banner
+// and offer a way back.
+
+export const IMPERSONATION_TTL_SECONDS = 60;
+
+export function signImpersonation(userId: string, adminId: string): string {
+  const payload = Buffer.from(
+    JSON.stringify({
+      uid: userId,
+      by: adminId,
+      exp: Date.now() + IMPERSONATION_TTL_SECONDS * 1000,
+      n: randomBytes(8).toString("hex"),
+    })
+  ).toString("base64url");
+  const sig = createHmac("sha256", key()).update(payload).digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+/** Returns { userId, adminId } or null when the token is invalid or expired. */
+export function verifyImpersonation(token: string | undefined): { userId: string; adminId: string } | null {
+  if (!token) return null;
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig) return null;
+  const expected = createHmac("sha256", key()).update(payload).digest("base64url");
+  if (expected.length !== sig.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+      uid?: unknown;
+      by?: unknown;
+      exp?: unknown;
+    };
+    if (typeof data.uid !== "string" || typeof data.by !== "string") return null;
+    if (typeof data.exp !== "number" || data.exp < Date.now()) return null;
+    return { userId: data.uid, adminId: data.by };
+  } catch {
+    return null;
+  }
+}
