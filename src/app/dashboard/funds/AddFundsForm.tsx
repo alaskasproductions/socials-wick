@@ -79,8 +79,10 @@ export default function AddFundsForm({
           )}
 
           <p className="mt-3 text-xs text-slate-400">
-            Your balance is credited once we see the payment, and you will get an email and a
-            notification then. The request is listed below as pending in the meantime.
+            Transfers usually take 1 to 3 working days, depending on your bank. Your balance is credited
+            as soon as the money arrives, and you will get an email and a notification then. The request
+            stays listed below as waiting in the meantime. Need the funds now? Pay by card instead, which
+            is credited straight away.
           </p>
         </div>
       </div>
@@ -128,8 +130,9 @@ export default function AddFundsForm({
         {pending ? "Creating…" : "Get payment details"}
       </button>
       <p className="text-xs text-slate-500">
-        You will see where to send the money and a reference to quote. Your balance is credited once we
-        receive it, so this takes longer than paying by card.
+        You will see where to send the money and a reference to quote. Transfers usually arrive in 1 to 3
+        working days, depending on your bank, and your balance is credited as soon as we see the payment.
+        Paying by card is instant.
       </p>
     </form>
   );

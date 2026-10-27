@@ -46,14 +46,20 @@ export default async function FundsPage({
             </div>
           )}
 
+          {(vivaEnabled || stripeEnabled) && (
+            <p className="mt-6 rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+              ⚡ Card: your balance is credited straight away, so you can order within seconds.
+            </p>
+          )}
+
           {vivaEnabled && (
-            <div className="mt-6 rounded-xl glass p-6">
+            <div className="mt-4 rounded-xl glass p-6">
               <VivaPaymentForm />
             </div>
           )}
 
           {stripeEnabled && (
-            <div className="mt-6 rounded-xl glass p-6">
+            <div className="mt-4 rounded-xl glass p-6">
               <StripePaymentForm />
             </div>
           )}
@@ -61,6 +67,10 @@ export default async function FundsPage({
 
         <div>
           <h3 className="text-sm font-semibold text-slate-300">Bank transfer</h3>
+          <p className="mt-2 rounded-lg bg-amber-500/10 px-4 py-2 text-sm text-amber-300">
+            🏦 Bank transfer: the money usually takes 1 to 3 working days to reach us, depending on your
+            bank. Your balance is credited as soon as it arrives.
+          </p>
           <div className="mt-3 rounded-xl glass p-6">
             <AddFundsForm
               methods={manualMethods.map((m) => ({ key: m.key, label: m.label }))}

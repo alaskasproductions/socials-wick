@@ -224,7 +224,9 @@ export async function notifyCustomerPaymentInstructions(params: {
           ? "<p><strong>Please put the payment reference in the transfer description.</strong> It is how we match your payment to your account.</p>"
           : ""
       }
-      <p>Your balance is credited as soon as we see the payment, and you will get another email then.</p>
+      <p>Transfers usually take 1 to 3 working days to reach us, depending on your bank. Your balance is
+      credited as soon as the money arrives, and you will get another email then. If you need the funds
+      straight away, you can pay by card instead, which is credited within seconds.</p>
       <p><a href="${siteUrl}/dashboard/funds">See your top-up requests →</a></p>
     `,
   });
