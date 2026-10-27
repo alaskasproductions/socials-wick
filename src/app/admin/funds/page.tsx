@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { reviewFundRequestAction } from "@/lib/actions/admin";
+import { resendPaymentInstructionsAction, reviewFundRequestAction } from "@/lib/actions/admin";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/15 text-amber-400",
@@ -63,6 +63,14 @@ export default async function AdminFundsPage() {
                           Reject
                         </button>
                       </form>
+                      {!r.vivaOrderCode && !r.stripeSessionId && (
+                        <form action={resendPaymentInstructionsAction} className="inline">
+                          <input type="hidden" name="id" value={r.id} />
+                          <button className="text-xs font-semibold text-brand hover:underline">
+                            {r.reference ? "Resend details" : "Send details"}
+                          </button>
+                        </form>
+                      )}
                     </>
                   )}
                 </td>

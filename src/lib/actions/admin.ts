@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import * as notify from "@/lib/notifications";
 import { pushCustomerNotification, formatMoney as money } from "@/lib/customer-notify";
 import { refundableAmount, refundOrder } from "@/lib/refunds";
+import { findManualMethod, getManualMethods, makePaymentReference } from "@/lib/manual-payments";
 
 async function requireAdmin() {
   const session = await auth();
@@ -279,6 +280,57 @@ export async function reviewFundRequestAction(formData: FormData): Promise<void>
     customerName: fundRequest.user.name,
     amount: fundRequest.amount,
     approved: decision === "APPROVED",
+  });
+
+  revalidatePath("/admin/funds");
+  revalidatePath("/dashboard/funds");
+}
+
+/**
+ * Sends (or re-sends) the payment instructions for a pending manual top-up.
+ * Covers requests made before the bank details existed: a missing reference is
+ * created and saved first, so the customer and the admin see the same code.
+ */
+export async function resendPaymentInstructionsAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const request = await prisma.fundRequest.findUnique({ where: { id }, include: { user: true } });
+  if (!request || request.status !== "PENDING") return;
+
+  const methods = await getManualMethods();
+  const method = findManualMethod(methods, request.method) ?? methods[0];
+  if (!method) return; // nothing is configured to pay into yet
+
+  let reference = request.reference;
+  if (!reference) {
+    for (let attempt = 0; attempt < 5 && !reference; attempt++) {
+      const candidate = makePaymentReference();
+      try {
+        await prisma.fundRequest.update({ where: { id: request.id }, data: { reference: candidate } });
+        reference = candidate;
+      } catch {
+        reference = null;
+      }
+    }
+  }
+  if (!reference) return;
+
+  await notify.notifyCustomerPaymentInstructions({
+    customerEmail: request.user.email,
+    customerName: request.user.name,
+    amount: request.amount,
+    method,
+    reference,
+  });
+
+  await pushCustomerNotification({
+    userId: request.userId,
+    type: "FUNDS",
+    title: `How to pay ${money(request.amount)} by ${method.label.toLowerCase()}`,
+    body: `We emailed you the details. Payment reference ${reference}.`,
+    href: "/dashboard/funds",
   });
 
   revalidatePath("/admin/funds");
