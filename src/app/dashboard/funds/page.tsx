@@ -60,7 +60,7 @@ export default async function FundsPage({
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-slate-300">Bank transfer &amp; other methods</h3>
+          <h3 className="text-sm font-semibold text-slate-300">Bank transfer</h3>
           <div className="mt-3 rounded-xl glass p-6">
             <AddFundsForm
               methods={manualMethods.map((m) => ({ key: m.key, label: m.label }))}

@@ -1,14 +1,14 @@
 import { randomBytes } from "crypto";
 import { getSettings } from "@/lib/settings";
 
-// Payment methods that are settled by hand: a bank transfer, PayPal, crypto or
-// a local method. The customer sees the details plus a short reference, sends
-// the money, and an admin approves the request once it arrives.
+// Bank transfer, settled by hand: the customer sees the account details plus a
+// short reference, sends the money, and an admin approves the request once it
+// arrives.
 //
 // Configured in Admin → Settings → Payment Gateways. A method with no details
 // saved is never offered to customers.
 
-export type ManualMethodKey = "bank" | "paypal" | "crypto" | "other";
+export type ManualMethodKey = "bank";
 
 export type ManualMethod = {
   key: ManualMethodKey;
@@ -24,9 +24,6 @@ export type ManualMethod = {
 
 export const MANUAL_LABELS: Record<ManualMethodKey, string> = {
   bank: "Bank Transfer",
-  paypal: "PayPal",
-  crypto: "Crypto",
-  other: "Other",
 };
 
 const KEYS = [
@@ -36,13 +33,6 @@ const KEYS = [
   "manual.bank.bic",
   "manual.bank.bankName",
   "manual.bank.notes",
-  "manual.paypal.enabled",
-  "manual.paypal.details",
-  "manual.crypto.enabled",
-  "manual.crypto.details",
-  "manual.other.enabled",
-  "manual.other.label",
-  "manual.other.details",
 ];
 
 export type ManualSettings = Record<string, string>;
@@ -67,27 +57,6 @@ export function manualMethodsFrom(s: ManualSettings): ManualMethod[] {
         { label: "Bank", value: (s["manual.bank.bankName"] ?? "").trim() },
       ].filter((l) => l.value),
       notes: (s["manual.bank.notes"] ?? "").trim(),
-      needsReference: true,
-    });
-  }
-
-  const paypal = (s["manual.paypal.details"] ?? "").trim();
-  if (s["manual.paypal.enabled"] === "true" && paypal) {
-    methods.push({ key: "paypal", label: MANUAL_LABELS.paypal, lines: [], notes: paypal, needsReference: true });
-  }
-
-  const crypto = (s["manual.crypto.details"] ?? "").trim();
-  if (s["manual.crypto.enabled"] === "true" && crypto) {
-    methods.push({ key: "crypto", label: MANUAL_LABELS.crypto, lines: [], notes: crypto, needsReference: false });
-  }
-
-  const other = (s["manual.other.details"] ?? "").trim();
-  if (s["manual.other.enabled"] === "true" && other) {
-    methods.push({
-      key: "other",
-      label: (s["manual.other.label"] ?? "").trim() || MANUAL_LABELS.other,
-      lines: [],
-      notes: other,
       needsReference: true,
     });
   }

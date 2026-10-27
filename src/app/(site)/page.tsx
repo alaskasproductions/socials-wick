@@ -53,7 +53,7 @@ const FAQS = [
   },
   {
     q: "What payment methods are supported?",
-    a: "We support cards, UPI, PayPal and crypto. Add funds to your balance and place orders instantly.",
+    a: "You can pay by card, which credits your balance instantly, or by bank transfer, which is credited as soon as the payment arrives.",
   },
 ];
 
@@ -238,7 +238,7 @@ export default async function HomePage() {
             {[
               ["⚡ Instant Delivery", "Fast processing with high retention and stable delivery."],
               ["💰 Cheapest Rates", "Affordable services for agencies, creators and resellers."],
-              ["🔒 Secure Payments", "Cards, UPI, PayPal and crypto all supported."],
+              ["🔒 Secure Payments", "Card payments and bank transfer, handled securely."],
               ["📈 API Integration", "Reseller API for automated order management."],
               ["🌎 Worldwide Support", "Trusted by users across the globe."],
               ["💬 24/7 Support", "A dedicated team ready to help, any time."],

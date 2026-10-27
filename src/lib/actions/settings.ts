@@ -244,9 +244,6 @@ export async function saveManualPaymentsAction(
   if (on("bankEnabled") && !iban) {
     return { error: "Add the IBAN before switching bank transfer on." };
   }
-  if (on("paypalEnabled") && !text("paypalDetails")) return { error: "Add the PayPal details before switching it on." };
-  if (on("cryptoEnabled") && !text("cryptoDetails")) return { error: "Add the crypto details before switching it on." };
-  if (on("otherEnabled") && !text("otherDetails")) return { error: "Add the details for the other method before switching it on." };
 
   await setSettings({
     "manual.bank.enabled": on("bankEnabled") ? "true" : "false",
@@ -255,13 +252,6 @@ export async function saveManualPaymentsAction(
     "manual.bank.bic": text("bic", 20).toUpperCase(),
     "manual.bank.bankName": text("bankName", 120),
     "manual.bank.notes": text("bankNotes", 600),
-    "manual.paypal.enabled": on("paypalEnabled") ? "true" : "false",
-    "manual.paypal.details": text("paypalDetails", 600),
-    "manual.crypto.enabled": on("cryptoEnabled") ? "true" : "false",
-    "manual.crypto.details": text("cryptoDetails", 600),
-    "manual.other.enabled": on("otherEnabled") ? "true" : "false",
-    "manual.other.label": text("otherLabel", 40),
-    "manual.other.details": text("otherDetails", 600),
   });
 
   revalidatePath("/admin/settings/payments");

@@ -76,7 +76,7 @@ export default async function AdminSettingsPage() {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold text-foreground">Bank transfer &amp; other manual methods</h3>
+        <h3 className="text-lg font-semibold text-foreground">Bank transfer</h3>
         <div className="mt-4 glass rounded-xl p-6">
           <ManualPaymentsForm values={manual} />
         </div>
