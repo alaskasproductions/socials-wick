@@ -149,6 +149,9 @@ model FundRequest {
   checkoutQuantity  Int?
   checkoutLink      String?
   checkoutOrderId   String?    @unique // Order created from this checkout
+  // Short code the customer puts on a bank transfer, so an incoming payment
+  // can be matched to this request (e.g. SW-4F2A9C).
+  reference         String?    @unique
   createdAt         DateTime   @default(now())
 }
 

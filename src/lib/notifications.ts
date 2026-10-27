@@ -192,3 +192,40 @@ export async function notifyCustomerOrderRefunded(params: {
     `,
   });
 }
+
+/** How to pay for a manual top-up (bank transfer, PayPal, crypto …). */
+export async function notifyCustomerPaymentInstructions(params: {
+  customerEmail: string;
+  customerName: string;
+  amount: number;
+  method: { label: string; lines: { label: string; value: string }[]; notes: string; needsReference: boolean };
+  reference: string;
+}): Promise<void> {
+  const { getSiteUrl } = await import("@/lib/seo-settings");
+  const siteUrl = await getSiteUrl();
+  const rows = [
+    `<li><strong>Amount:</strong> €${params.amount.toFixed(2)}</li>`,
+    ...params.method.lines.map((l) => `<li><strong>${l.label}:</strong> ${l.value}</li>`),
+    ...(params.method.needsReference
+      ? [`<li><strong>Payment reference:</strong> <code>${params.reference}</code></li>`]
+      : []),
+  ].join("");
+
+  await safeSend({
+    to: params.customerEmail,
+    subject: `How to pay €${params.amount.toFixed(2)} — reference ${params.reference}`,
+    html: `
+      <p>Hi ${params.customerName},</p>
+      <p>Here is how to send your ${params.method.label.toLowerCase()} payment.</p>
+      <ul>${rows}</ul>
+      ${params.method.notes ? `<p style="white-space:pre-line">${params.method.notes}</p>` : ""}
+      ${
+        params.method.needsReference
+          ? "<p><strong>Please put the payment reference in the transfer description.</strong> It is how we match your payment to your account.</p>"
+          : ""
+      }
+      <p>Your balance is credited as soon as we see the payment, and you will get another email then.</p>
+      <p><a href="${siteUrl}/dashboard/funds">See your top-up requests →</a></p>
+    `,
+  });
+}

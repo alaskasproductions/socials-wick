@@ -5,6 +5,7 @@ import VivaPaymentForm from "./VivaPaymentForm";
 import StripePaymentForm from "./StripePaymentForm";
 import * as viva from "@/lib/providers/viva";
 import * as stripe from "@/lib/providers/stripe";
+import { getManualMethods } from "@/lib/manual-payments";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/15 text-amber-400",
@@ -12,15 +13,22 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: "bg-red-500/15 text-red-400",
 };
 
-export default async function FundsPage() {
+export default async function FundsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ need?: string }>;
+}) {
   const session = await auth();
-  const [requests, vivaEnabled, stripeEnabled] = await Promise.all([
+  const sp = (await searchParams) ?? {};
+  const needed = Number(sp.need);
+  const [requests, vivaEnabled, stripeEnabled, manualMethods] = await Promise.all([
     prisma.fundRequest.findMany({
       where: { userId: session!.user.id },
       orderBy: { createdAt: "desc" },
     }),
     viva.isEnabled(),
     stripe.isEnabled(),
+    getManualMethods(),
   ]);
 
   const noGatewaysEnabled = !vivaEnabled && !stripeEnabled;
@@ -52,9 +60,12 @@ export default async function FundsPage() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-slate-300">Other Payment Methods</h3>
+          <h3 className="text-sm font-semibold text-slate-300">Bank transfer &amp; other methods</h3>
           <div className="mt-3 rounded-xl glass p-6">
-            <AddFundsForm />
+            <AddFundsForm
+              methods={manualMethods.map((m) => ({ key: m.key, label: m.label }))}
+              suggestedAmount={Number.isFinite(needed) && needed > 0 ? needed : undefined}
+            />
           </div>
         </div>
       </div>
@@ -74,10 +85,15 @@ export default async function FundsPage() {
               {requests.map((r) => (
                 <tr key={r.id}>
                   <td className="px-5 py-3">€{r.amount.toFixed(2)}</td>
-                  <td className="px-5 py-3">{r.method}</td>
+                  <td className="px-5 py-3">
+                    {r.method}
+                    {r.reference && (
+                      <span className="block font-mono text-xs text-slate-500">Ref {r.reference}</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3">
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[r.status]}`}>
-                      {r.status}
+                      {r.status === "PENDING" ? "Waiting for your payment" : r.status === "APPROVED" ? "Credited" : "Declined"}
                     </span>
                   </td>
                 </tr>

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { OrderError, orderCharge, placeOrder } from "@/lib/orders";
 import { linkRuleFor } from "@/lib/link-rules";
+import { findManualMethod, getManualMethods, makePaymentReference } from "@/lib/manual-payments";
 import { displayName } from "@/lib/catalog";
 import { formatMoney, pushAdminNotification } from "@/lib/admin-notify";
 import { auth } from "@/lib/auth";
@@ -40,48 +41,86 @@ export async function placeOrderAction(
   redirect(`/dashboard/orders/${placed.orderId}?placed=1`);
 }
 
+export type FundRequestState =
+  | { error: string }
+  | {
+      success: string;
+      method: string;
+      amount: number;
+      reference: string;
+      lines: { label: string; value: string }[];
+      notes: string;
+      needsReference: boolean;
+    }
+  | undefined;
+
 export async function requestFundsAction(
-  _prevState: ActionState,
+  _prevState: FundRequestState,
   formData: FormData
-): Promise<ActionState> {
+): Promise<FundRequestState> {
   const session = await auth();
   if (!session?.user) return { error: "You must be logged in." };
 
   const amount = Number(formData.get("amount") ?? 0);
-  const method = String(formData.get("method") ?? "");
+  const methodLabel = String(formData.get("method") ?? "");
 
   if (!amount || amount <= 0) return { error: "Enter a valid amount." };
-  if (!method) return { error: "Select a payment method." };
+
+  // Only a method you have actually set up can be chosen.
+  const methods = await getManualMethods();
+  const method = findManualMethod(methods, methodLabel);
+  if (!method) return { error: "That payment method is not available. Please pick another one." };
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return { error: "User not found." };
 
-  await prisma.fundRequest.create({
-    data: { userId: user.id, amount, method, status: "PENDING" },
+  // Collisions are vanishingly unlikely, but the column is unique, so retry.
+  let request: { reference: string | null } | null = null;
+  for (let attempt = 0; attempt < 5 && !request; attempt++) {
+    const reference = makePaymentReference();
+    try {
+      request = await prisma.fundRequest.create({
+        data: { userId: user.id, amount, method: method.label, status: "PENDING", reference },
+      });
+    } catch {
+      request = null;
+    }
+  }
+  if (!request?.reference) return { error: "Could not create the request. Please try again." };
+
+  await notify.notifyCustomerPaymentInstructions({
+    customerEmail: user.email,
+    customerName: user.name,
+    amount,
+    method,
+    reference: request.reference,
   });
 
   await notify.notifyAdminNewFundRequest({
     customerName: user.name,
     customerEmail: user.email,
     amount,
-    method,
+    method: method.label,
   });
   await pushAdminNotification({
     type: "FUND_REQUEST",
-    title: `Fund request — ${formatMoney(amount)} via ${method}`,
-    body: `${user.name} (${user.email}) is waiting for approval.`,
+    title: `Fund request — ${formatMoney(amount)} via ${method.label}`,
+    body: `${user.name} (${user.email}) · reference ${request.reference} · waiting for the payment to arrive.`,
     href: "/admin/funds",
   });
 
   revalidatePath("/dashboard/funds");
-  return { success: "Fund request submitted. It will be reviewed shortly." };
+  return {
+    success: "Request created. Send the payment using the details below.",
+    method: method.label,
+    amount,
+    reference: request.reference,
+    lines: method.lines,
+    notes: method.notes,
+    needsReference: method.needsReference,
+  };
 }
 
-// Starts a Viva Wallet Smart Checkout payment: creates a payment order with
-// Viva, records a matching PENDING FundRequest, then redirects the customer
-// to Viva's hosted checkout page to pay by card. Balance is credited once
-// the payment is confirmed, via the /dashboard/funds/callback return page
-// and/or the Viva webhook — never at this step.
 export async function startVivaPaymentAction(
   _prevState: ActionState,
   formData: FormData

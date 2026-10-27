@@ -35,7 +35,12 @@ export default async function AdminFundsPage() {
                   <div className="text-xs text-slate-400">{r.user.email}</div>
                 </td>
                 <td className="px-5 py-3">€{r.amount.toFixed(2)}</td>
-                <td className="px-5 py-3">{r.method}</td>
+                <td className="px-5 py-3">
+                  {r.method}
+                  {r.reference && (
+                    <span className="block font-mono text-xs text-brand">{r.reference}</span>
+                  )}
+                </td>
                 <td className="px-5 py-3">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[r.status]}`}>
                     {r.status}

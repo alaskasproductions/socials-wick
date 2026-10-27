@@ -1,9 +1,12 @@
 import { getSettings } from "@/lib/settings";
 import VivaSettingsForm from "./VivaSettingsForm";
 import StripeSettingsForm from "./StripeSettingsForm";
+import ManualPaymentsForm from "./ManualPaymentsForm";
+import { getManualSettings } from "@/lib/manual-payments";
 
 export default async function AdminSettingsPage() {
-  const settings = await getSettings([
+  const [settings, manual] = await Promise.all([
+    getSettings([
     "viva.enabled",
     "viva.env",
     "viva.sourceCode",
@@ -14,6 +17,8 @@ export default async function AdminSettingsPage() {
     "stripe.publishableKey",
     "stripe.secretKey",
     "stripe.webhookSecret",
+    ]),
+    getManualSettings(),
   ]);
 
   return (
@@ -67,6 +72,13 @@ export default async function AdminSettingsPage() {
             hasSecretKey={Boolean(settings["stripe.secretKey"])}
             hasWebhookSecret={Boolean(settings["stripe.webhookSecret"])}
           />
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold text-foreground">Bank transfer &amp; other manual methods</h3>
+        <div className="mt-4 glass rounded-xl p-6">
+          <ManualPaymentsForm values={manual} />
         </div>
       </section>
     </div>
