@@ -38,15 +38,49 @@ function referenceLines(r: {
   return lines;
 }
 
-export default async function AdminFundsPage() {
+// A card payment that was never confirmed this long ago was abandoned at the
+// checkout. It still counts as pending, because a late confirmation is always
+// honoured, but it should not look like work waiting for an admin.
+const ABANDONED_AFTER_MS = 60 * 60 * 1000;
+
+/**
+ * The requests plus the two things the table needs to know about each one:
+ * whether a provider owns it, and whether its checkout was abandoned. Both are
+ * worked out here rather than while rendering, so the clock is read once.
+ */
+async function loadFundRequests() {
   const requests = await prisma.fundRequest.findMany({
     include: { user: true },
     orderBy: { createdAt: "desc" },
   });
+  const cutoff = Date.now() - ABANDONED_AFTER_MS;
+  return requests.map((r) => {
+    const byCard = Boolean(r.vivaOrderCode || r.stripeSessionId);
+    return {
+      ...r,
+      byCard,
+      cardProvider: r.stripeSessionId ? "Stripe" : "Viva",
+      abandoned: byCard && r.status === "PENDING" && r.createdAt.getTime() < cutoff,
+    };
+  });
+}
+
+export default async function AdminFundsPage() {
+  const requests = await loadFundRequests();
+
+  // The only thing on this page that is actually yours to act on.
+  const waitingForYou = requests.filter(
+    (r) => r.status === "PENDING" && !r.vivaOrderCode && !r.stripeSessionId
+  ).length;
 
   return (
     <div>
       <h2 className="text-xl font-bold text-foreground">Fund Requests</h2>
+      <p className="mt-2 text-sm text-slate-400">
+        {waitingForYou === 0
+          ? "Nothing is waiting for you. Card payments approve themselves once Viva or Stripe confirms them."
+          : `${waitingForYou} bank ${waitingForYou === 1 ? "transfer" : "transfers"} waiting for you. Card payments approve themselves once Viva or Stripe confirms them.`}
+      </p>
       <div className="mt-4 overflow-x-auto rounded-xl glass">
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="bg-white/5 text-slate-400">
@@ -62,10 +96,9 @@ export default async function AdminFundsPage() {
           </thead>
           <tbody className="divide-y divide-white/5">
             {requests.map((r) => {
+              // byCard / abandoned come from loadFundRequests above.
+              const { byCard, cardProvider, abandoned } = r;
               const refs = referenceLines(r);
-              // Card top-ups are the provider's to approve, not ours.
-              const byCard = Boolean(r.vivaOrderCode || r.stripeSessionId);
-              const cardProvider = r.stripeSessionId ? "Stripe" : "Viva";
               return (
               <tr key={r.id}>
                 <td className="px-5 py-3 whitespace-nowrap">
@@ -88,20 +121,31 @@ export default async function AdminFundsPage() {
                   {refs.length === 0 && <span className="text-xs text-slate-500">—</span>}
                 </td>
                 <td className="px-5 py-3">
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[r.status]}`}>
-                    {r.status}
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      abandoned ? "bg-slate-500/15 text-slate-400" : STATUS_STYLES[r.status]
+                    }`}
+                    title={
+                      abandoned
+                        ? "The customer left the card checkout without paying. Nothing to do: if they pay later it is credited anyway."
+                        : undefined
+                    }
+                  >
+                    {abandoned ? "NOT PAID" : r.status}
                   </span>
                 </td>
                 <td className="px-5 py-3 text-right space-x-3">
                   {r.status === "PENDING" && (
                     <>
                       {byCard ? (
-                        <span
-                          className="text-xs text-slate-400"
-                          title={`Only ${cardProvider} can approve this. It turns green by itself the moment the payment is confirmed.`}
-                        >
-                          Waiting for {cardProvider}
-                        </span>
+                        !abandoned && (
+                          <span
+                            className="text-xs text-slate-400"
+                            title={`Only ${cardProvider} can approve this. It turns green by itself the moment the payment is confirmed.`}
+                          >
+                            Waiting for {cardProvider}
+                          </span>
+                        )
                       ) : (
                         <form action={reviewFundRequestAction} className="inline">
                           <input type="hidden" name="id" value={r.id} />
