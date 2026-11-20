@@ -63,6 +63,9 @@ export default async function AdminFundsPage() {
           <tbody className="divide-y divide-white/5">
             {requests.map((r) => {
               const refs = referenceLines(r);
+              // Card top-ups are the provider's to approve, not ours.
+              const byCard = Boolean(r.vivaOrderCode || r.stripeSessionId);
+              const cardProvider = r.stripeSessionId ? "Stripe" : "Viva";
               return (
               <tr key={r.id}>
                 <td className="px-5 py-3 whitespace-nowrap">
@@ -92,21 +95,37 @@ export default async function AdminFundsPage() {
                 <td className="px-5 py-3 text-right space-x-3">
                   {r.status === "PENDING" && (
                     <>
-                      <form action={reviewFundRequestAction} className="inline">
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="hidden" name="decision" value="APPROVED" />
-                        <button className="text-xs font-semibold text-green-400 hover:underline">
-                          Approve
-                        </button>
-                      </form>
+                      {byCard ? (
+                        <span
+                          className="text-xs text-slate-400"
+                          title={`Only ${cardProvider} can approve this. It turns green by itself the moment the payment is confirmed.`}
+                        >
+                          Waiting for {cardProvider}
+                        </span>
+                      ) : (
+                        <form action={reviewFundRequestAction} className="inline">
+                          <input type="hidden" name="id" value={r.id} />
+                          <input type="hidden" name="decision" value="APPROVED" />
+                          <button className="text-xs font-semibold text-green-400 hover:underline">
+                            Approve
+                          </button>
+                        </form>
+                      )}
                       <form action={reviewFundRequestAction} className="inline">
                         <input type="hidden" name="id" value={r.id} />
                         <input type="hidden" name="decision" value="REJECTED" />
-                        <button className="text-xs font-semibold text-red-400 hover:underline">
-                          Reject
+                        <button
+                          className="text-xs font-semibold text-red-400 hover:underline"
+                          title={
+                            byCard
+                              ? "Clears an abandoned card attempt. If the payment was real, it is restored automatically."
+                              : undefined
+                          }
+                        >
+                          {byCard ? "Clear attempt" : "Reject"}
                         </button>
                       </form>
-                      {!r.vivaOrderCode && !r.stripeSessionId && (
+                      {!byCard && (
                         <form action={resendPaymentInstructionsAction} className="inline">
                           <input type="hidden" name="id" value={r.id} />
                           <button className="text-xs font-semibold text-brand hover:underline">

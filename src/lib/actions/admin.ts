@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as notify from "@/lib/notifications";
 import { pushCustomerNotification, formatMoney as money } from "@/lib/customer-notify";
-import { refundableAmount, refundOrder } from "@/lib/refunds";
+import { refundOrder } from "@/lib/refunds";
 import { findManualMethod, getManualMethods, makePaymentReference } from "@/lib/manual-payments";
 
 async function requireAdmin() {
@@ -242,6 +242,14 @@ export async function reviewFundRequestAction(formData: FormData): Promise<void>
     include: { user: true },
   });
   if (!fundRequest || fundRequest.status !== "PENDING") return;
+
+  // A card top-up is approved only by the provider's own confirmation
+  // (viva-confirm / stripe-confirm), never by hand: until Viva or Stripe says
+  // the money was taken there is nothing to credit. Cancelling one stays
+  // allowed, and undoes itself if the payment turns out to be real.
+  if (decision === "APPROVED" && (fundRequest.vivaOrderCode || fundRequest.stripeSessionId)) {
+    return;
+  }
 
   if (decision === "APPROVED") {
     await prisma.$transaction([

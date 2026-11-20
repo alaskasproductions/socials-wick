@@ -29,8 +29,11 @@ export async function confirmStripePayment(sessionId: string): Promise<ConfirmRe
   if (!amountMatches) return { status: "mismatch" };
   if (session.payment_status !== "paid") return { status: "unpaid" };
 
+  // Not just PENDING: Stripe says this money was taken, so a request an admin
+  // had cancelled as an abandoned attempt is put right here. APPROVED is
+  // excluded, which is what keeps the credit to exactly once.
   const updated = await prisma.fundRequest.updateMany({
-    where: { id: fundRequest.id, status: "PENDING" },
+    where: { id: fundRequest.id, status: { not: "APPROVED" } },
     data: { status: "APPROVED" },
   });
 

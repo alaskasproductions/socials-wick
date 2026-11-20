@@ -39,8 +39,11 @@ export async function confirmVivaPayment(
   if (!orderMatches || !amountMatches) return { status: "mismatch" };
   if (txn.statusId !== "F") return { status: "unpaid" };
 
+  // Not just PENDING: Viva says this money was taken, so a request an admin
+  // had cancelled as an abandoned attempt is put right here. APPROVED is
+  // excluded, which is what keeps the credit to exactly once.
   const updated = await prisma.fundRequest.updateMany({
-    where: { id: fundRequest.id, status: "PENDING" },
+    where: { id: fundRequest.id, status: { not: "APPROVED" } },
     data: { status: "APPROVED", vivaTransactionId: transactionId },
   });
 
